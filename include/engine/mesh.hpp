@@ -1,17 +1,13 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <vector>
-
-struct Vertex {
-  float x;
-  float y;
-  float z;
-};
 
 class Mesh {
 public:
-  Mesh(std::vector<Vertex> vertices);
+  Mesh(std::vector<float> vertices, std::vector<float> uvs);
 
   ~Mesh();
 
@@ -22,7 +18,9 @@ public:
 private:
   unsigned int vertex_count;
   unsigned int id;
-  unsigned int pos_buffer;
+  // 0: pos
+  // 1: uv
+  unsigned int vertex_buffers[2];
 };
 
 
