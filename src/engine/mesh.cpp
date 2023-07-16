@@ -1,3 +1,4 @@
+#include "engine/texture.hpp"
 #include <engine/mesh.hpp>
 
 #include <glm/ext/vector_float2.hpp>
@@ -39,6 +40,10 @@ void Mesh::bind() {
   glEnableVertexAttribArray(1);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[1]);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+  for (auto texture : textures) {
+    texture.bind();
+  }
 }
 
 void Mesh::unbind() {
@@ -51,6 +56,10 @@ Mesh::~Mesh() {}
 
 unsigned int Mesh::get_vertex_count() {
   return vertex_count;
+}
+
+void Mesh::add_texture(Texture texture) {
+  textures.push_back(texture);
 }
 
 Mesh create_plane() {

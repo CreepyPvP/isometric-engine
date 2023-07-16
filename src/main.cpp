@@ -10,6 +10,7 @@
 #include "engine/mesh.hpp"
 #include "engine/renderer.hpp"
 #include "engine/shader.hpp"
+#include "engine/texture.hpp"
 #include "engine/window.hpp"
 
 const unsigned int SCR_WIDTH = 800;
@@ -30,9 +31,11 @@ int run() {
   Window window(SCR_WIDTH, SCR_HEIGHT, "isometric");
   Camera camera;
   Shader shader("../shader/vert.glsl", "../shader/frag.glsl"); 
+  Texture texture("../assets/tex.jpg");
   Renderer renderer;
 
   Mesh mesh = create_plane();
+  mesh.add_texture(texture);
   std::vector objects = {mesh}; 
 
   while (!window.should_close()) {
