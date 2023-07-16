@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "engine/camera.hpp"
+#include "engine/shader.hpp"
 #include "engine/window.hpp"
 
 const unsigned int SCR_WIDTH = 800;
@@ -24,7 +25,8 @@ int main() {
 
 int run() {
   Window window(SCR_WIDTH, SCR_HEIGHT, "isometric");
-  Camera camera(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  Camera camera(glm::vec3(10.0f), glm::vec3(-10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  Shader shader("../shader/vert.glsl", "../shader/frag.glsl"); 
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     return -1;

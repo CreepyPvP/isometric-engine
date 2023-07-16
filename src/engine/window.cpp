@@ -26,6 +26,10 @@ Window::Window(int width, int height, string title) : width(width), height(heigh
   }
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    throw runtime_error("failed to load required extensions");
+  }
 }
 
 Window::~Window() {
