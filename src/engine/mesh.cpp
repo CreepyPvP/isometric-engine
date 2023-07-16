@@ -41,8 +41,9 @@ void Mesh::bind() {
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[1]);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-  for (auto texture : textures) {
-    texture.bind();
+  for (int i = 0; i < textures.size(); i++) {
+    glActiveTexture(GL_TEXTURE0 + i);
+    textures[i].bind();
   }
 }
 
