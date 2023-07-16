@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.20.0 FATAL_ERROR)
 
 project(isometric)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Add all Source Files
 file(GLOB_RECURSE SOURCE_FILES 
 	${CMAKE_SOURCE_DIR}/src/*.cpp
@@ -47,6 +49,7 @@ add_subdirectory(${GLAD_ROOT_DIR})
 target_include_directories(${PROJECT_NAME} 
 	PUBLIC ${GLFW_ROOT_DIR}/include
 	PUBLIC ${GLAD_ROOT_DIR}/include/glad
+  PUBLIC include
 )
 
 #		Include Files from Outside the Workspace Folder -> Like Vulkan SDK
