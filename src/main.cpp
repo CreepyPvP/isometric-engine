@@ -4,8 +4,11 @@
 #include <glm/ext/vector_float3.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include "engine/camera.hpp"
+#include "engine/mesh.hpp"
+#include "engine/renderer.hpp"
 #include "engine/shader.hpp"
 #include "engine/window.hpp"
 
@@ -25,17 +28,20 @@ int main() {
 
 int run() {
   Window window(SCR_WIDTH, SCR_HEIGHT, "isometric");
-  Camera camera(glm::vec3(10.0f), glm::vec3(-10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  Camera camera;
   Shader shader("../shader/vert.glsl", "../shader/frag.glsl"); 
+  Renderer renderer;
 
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    return -1;
-  }
+  Mesh mesh = create_plane();
+  std::vector objects = {mesh}; 
+
   while (!window.should_close()) {
     window.process_input();
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    renderer.render(camera, shader, objects, &window.width, &window.height);
 
     window.update();
   }

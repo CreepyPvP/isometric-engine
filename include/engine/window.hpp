@@ -16,9 +16,10 @@ public:
 
   void process_input();
 
-private:
   int width;
   int height;
+
+private:
   GLFWwindow* window;
 };
 

@@ -1,5 +1,6 @@
 #include <engine/shader.hpp>
 #include <fstream>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -52,12 +53,22 @@ Shader::Shader(std::string v_file, std::string f_file) {
 
   glDeleteShader(vertex);
   glDeleteShader(fragment);
+
+  get_all_uniforms();
 }
 
 Shader::~Shader() {}
 
 void Shader::use() {
   glUseProgram(id);
+}
+
+void Shader::set_projection(glm::mat4& projection) {
+  glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, &projection[0][0]);
+}
+
+void Shader::set_view(glm::mat4& view) {
+  glUniformMatrix4fv(uniform_view, 1, GL_FALSE, &view[0][0]);
 }
 
 std::string Shader::read_file(std::string file) {
@@ -70,4 +81,9 @@ std::string Shader::read_file(std::string file) {
   } catch (...) {
     throw std::runtime_error("failed to read file: " + file);
   }
+}
+
+void Shader::get_all_uniforms() {
+  uniform_view = glGetUniformLocation(id, "view");
+  uniform_projection = glGetUniformLocation(id, "projection");
 }

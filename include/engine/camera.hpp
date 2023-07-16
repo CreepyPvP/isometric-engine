@@ -6,18 +6,15 @@
 
 class Camera {
 public:
-  Camera(glm::vec3 position, glm::vec3 direction, glm::vec3 up);
+  Camera();
 
   ~Camera();
 
   glm::mat4 get_view_matrix(); 
 
-  glm::mat4 get_projection_matrix(); 
+  glm::mat4 get_projection_matrix(int screen_width, int screen_height); 
 
 private:
-  glm::vec3 position;
-  glm::vec3 direction;
-  glm::vec3 up;
 };
 
 #endif

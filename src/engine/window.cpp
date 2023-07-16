@@ -12,6 +12,9 @@ using namespace std;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
+  auto win_obj = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+  win_obj->width = width;
+  win_obj->height = height;
 }
 
 Window::Window(int width, int height, string title) : width(width), height(height) {
@@ -24,12 +27,15 @@ Window::Window(int width, int height, string title) : width(width), height(heigh
   if (window == NULL) {
     throw runtime_error("failed to create window");
   }
+  glfwSetWindowUserPointer(window, this);
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     throw runtime_error("failed to load required extensions");
   }
+
+  glCullFace(GL_NONE);
 }
 
 Window::~Window() {
