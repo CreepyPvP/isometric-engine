@@ -6,9 +6,17 @@
 #include <glm/ext/vector_float3.hpp>
 #include <vector>
 
+struct Vertex {
+  float x;
+  float y;
+  float z;
+  float uv_x;
+  float uv_y;
+};
+
 class Mesh {
 public:
-  Mesh(std::vector<float> vertices, std::vector<float> uvs);
+  Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
   ~Mesh();
 
@@ -20,9 +28,8 @@ public:
 private:
   unsigned int vertex_count;
   unsigned int id;
-  // 0: pos
-  // 1: uv
-  unsigned int vertex_buffers[2];
+  unsigned int vertex_buffer;
+  unsigned int index_buffer;
 
   std::vector<Texture> textures;
 };

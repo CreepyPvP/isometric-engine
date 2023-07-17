@@ -2,7 +2,7 @@
 
 ## Todo
 - Texture loading                       // done
-- indices
+- indices                               // done
 - Model loading
 - Sceletal animations
 - ECS

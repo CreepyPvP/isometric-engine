@@ -17,7 +17,7 @@ void Renderer::render(Camera& camera, Shader& shader, std::vector<Mesh>& objects
 
   for (auto obj : objects) {
     obj.bind();
-    glDrawArrays(GL_TRIANGLES, 0, obj.get_vertex_count());
+    glDrawElements(GL_TRIANGLES, obj.get_vertex_count(), GL_UNSIGNED_INT, 0);
     obj.unbind();
   }
 }
