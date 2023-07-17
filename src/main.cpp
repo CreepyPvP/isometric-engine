@@ -8,6 +8,7 @@
 
 #include "engine/camera.hpp"
 #include "engine/mesh.hpp"
+#include "engine/model.hpp"
 #include "engine/renderer.hpp"
 #include "engine/shader.hpp"
 #include "engine/texture.hpp"
@@ -33,10 +34,11 @@ int run() {
   Shader shader("../shader/vert.glsl", "../shader/frag.glsl"); 
   Texture texture("../assets/tex.jpg");
   Renderer renderer;
+  Model model("../assets/backpack/backpack.obj");
 
-  Mesh mesh = create_plane();
-  mesh.add_texture(texture);
-  std::vector objects = {mesh}; 
+  // Mesh mesh = create_plane();
+  // mesh.add_texture(texture);
+  // std::vector objects = {mesh}; 
 
   while (!window.should_close()) {
     window.process_input();
@@ -44,7 +46,7 @@ int run() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    renderer.render(camera, shader, objects, &window.width, &window.height);
+    renderer.render(camera, shader, model.meshes, &window.width, &window.height);
 
     window.update();
   }

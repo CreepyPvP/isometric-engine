@@ -11,7 +11,8 @@ void Renderer::render(Camera& camera, Shader& shader, std::vector<Mesh>& objects
   shader.use();
 
   auto view = camera.get_view_matrix();
-  auto projection = camera.get_projection_matrix(*screen_width, *screen_height);
+  // auto projection = camera.get_projection_matrix(*screen_width, *screen_height);
+  auto projection = camera.get_projection_matrix(4, 4);
   shader.set_view(view);
   shader.set_projection(projection);
 
