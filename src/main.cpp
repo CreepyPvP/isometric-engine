@@ -1,56 +1,127 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stdio.h>
 
-#include <glm/ext/vector_float3.hpp>
-#include <iostream>
-#include <stdexcept>
-#include <vector>
+#include <opengl.hpp>
 
-#include "engine/camera.hpp"
-#include "engine/mesh.hpp"
-#include "engine/model.hpp"
-#include "engine/renderer.hpp"
-#include "engine/shader.hpp"
-#include "engine/texture.hpp"
-#include "engine/window.hpp"
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+#define internal static 
+#define global_variable static 
 
-int run();
+typedef unsigned char byte;
+
+struct Window {
+    int width;
+    int height;
+    GLFWwindow* handle;
+};
+
+global_variable Window globalWindow;
+global_variable unsigned int tilemapVao;
+
+internal void frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
+    glViewport(0, 0, width, height);
+    globalWindow.width = width;
+    globalWindow.height = height;
+}
+
+internal void initWindow() {
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    globalWindow.width = 1280;
+    globalWindow.height = 720;
+    globalWindow.handle = glfwCreateWindow(globalWindow.width, globalWindow.height, "My Game", NULL, NULL);
+    if (!globalWindow.handle) {
+        printf("Failed to create window\n");
+    }
+    glfwMakeContextCurrent(globalWindow.handle);
+    glfwSetFramebufferSizeCallback(globalWindow.handle, frameBufferResizeCallback);
+}
+
+internal void createTilemapBuffers() {
+    float vertices[] = {
+        -0.5,  -0.5,  0,
+        -0.5,   0.5,  0,
+         0.5,  -0.5,  0,
+         0.5,   0.5,  0
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2, 2, 1, 3
+    };
+
+    int width = 3;
+    int height = 3;
+
+    byte tileData[9] = {
+        0, 255, 0,
+        255, 0, 255,
+        0, 255, 0
+    };
+
+    int indexCount = 6;
+    int vertexCount = 4;
+
+    glGenVertexArrays(1, &tilemapVao);
+    glBindVertexArray(tilemapVao);
+
+    unsigned int buffers[3];
+    glGenBuffers(3, buffers);
+    unsigned int vertexBuffer = buffers[0];
+    unsigned int indexBuffer = buffers[1];
+    unsigned int tileDataBuffer = buffers[2];
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount * 3, &vertices[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexCount, &indices[0], GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, tileDataBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(byte) * width * height, &tileData[0], GL_STATIC_DRAW);
+
+    // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 3, 0);
+
+    // tile data
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
 
 int main() {
-  try {
-    return run();
-  } catch (std::runtime_error e) {
-    std::cout << "Caught error: " << e.what() << std::endl;
-    return 1;
-  }
+    initWindow();
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        printf("failed to load required extensions");
+    }
+    glCullFace(GL_NONE);
+
+    Shader shader = createShader("../shader/vert.glsl", "../shader/frag.glsl");
+
+
+    createTilemapBuffers();
+
+    while (!glfwWindowShouldClose(globalWindow.handle)) {
+        if (glfwGetKey(globalWindow.handle, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(globalWindow.handle, true);
+        }
+
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        useShader(&shader);
+
+        glBindVertexArray(tilemapVao);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glfwSwapBuffers(globalWindow.handle);
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
 }
-
-int run() {
-  Window window(SCR_WIDTH, SCR_HEIGHT, "isometric");
-  Camera camera;
-  Shader shader("../shader/vert.glsl", "../shader/frag.glsl"); 
-  Texture texture("../assets/tex.jpg");
-  Renderer renderer;
-  Model model("../assets/backpack/backpack.obj");
-
-  // Mesh mesh = create_plane();
-  // mesh.add_texture(texture);
-  // std::vector objects = {mesh}; 
-
-  while (!window.should_close()) {
-    window.process_input();
-
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    renderer.render(camera, shader, model.meshes, &window.width, &window.height);
-
-    window.update();
-  }
-
-  return 0;
-}
-

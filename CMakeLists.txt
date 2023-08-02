@@ -32,20 +32,22 @@ find_package(OpenGL REQUIRED)
 
 # Variable for the Libs to add to the Linkers
 # Window libraries:
-# set(LIBS glfw opengl32 glad)
+set(LIBS glfw opengl32 glad assimp glm)
 # Linux libraries:
-set(LIBS glfw X11 glad assimp)
+# set(LIBS glfw X11 glad assimp glm)
 
 # Variables for Paths of External Libraries
 set(GLFW_ROOT_DIR external/glfw)
 set(GLAD_ROOT_DIR external/glad)
 set(ASSIMP_ROOT_DIR external/assimp)
+set(GLM_ROOT_DIR external/glm)
 
 
 # Add the External Libraries / Files Directory
 add_subdirectory(${GLFW_ROOT_DIR})
 add_subdirectory(${GLAD_ROOT_DIR})
 add_subdirectory(${ASSIMP_ROOT_DIR})
+add_subdirectory(${GLM_ROOT_DIR})
 
 # Add the Include Directories for the Libraries / Files
 #Used for adding #include into the cpp files
@@ -54,9 +56,10 @@ add_subdirectory(${ASSIMP_ROOT_DIR})
 
 target_include_directories(${PROJECT_NAME} 
 	PUBLIC ${GLFW_ROOT_DIR}/include
-	PUBLIC ${GLAD_ROOT_DIR}/include/glad
-  PUBLIC ${ASSIMP_ROOT_DIR}/include
-  PUBLIC include
+    PUBLIC ${GLAD_ROOT_DIR}/include/glad
+    PUBLIC ${ASSIMP_ROOT_DIR}/include
+    PUBLIC ${GLM_ROOT_DIR}/include
+    PUBLIC include
 )
 
 #		Include Files from Outside the Workspace Folder -> Like Vulkan SDK
@@ -72,7 +75,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_directories(${PROJECT_NAME} 
 	PRIVATE ${GLFW_ROOT_DIR}/src
-	PRIVATE ${GLAD_ROOT_DIR}/src}
+	PRIVATE ${GLAD_ROOT_DIR}/src
+    PRIVATE ${GLM_ROOT_DIR}/src
 )
 
 # Add the Libs to the Linker for the Project
