@@ -25,8 +25,8 @@ internal std::string readFile(std::string file) {
 }
 
 
-Shader createShader(std::string vFile, std::string fFile) {
-    Shader shader;
+TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
+    TilemapShader shader;
 
     std::string vRaw = readFile(vFile);
     std::string fRaw = readFile(fFile);
@@ -69,11 +69,15 @@ Shader createShader(std::string vFile, std::string fFile) {
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
+    shader.uniformModel = glGetUniformLocation(shader.id, "model");
+    shader.uniformView = glGetUniformLocation(shader.id, "view");
+    shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
+
     return shader;
 }
 
-void useShader(Shader *shader) {
-    glUseProgram(shader->id);
+void useShader(unsigned int id) {
+    glUseProgram(id);
 }
 
 void setUniformMat4(unsigned int uniformId, glm::mat4 *matrix) {

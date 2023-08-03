@@ -4,6 +4,9 @@
 
 #include <opengl.hpp>
 
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 #define internal static 
 #define global_variable static 
@@ -103,7 +106,24 @@ int main() {
     }
     glCullFace(GL_NONE);
 
-    Shader shader = createShader("../shader/vert.glsl", "../shader/frag.glsl");
+    auto modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-500.0f, 0.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(400.0f, 400.0f, 1.0f));
+    auto viewMatrix = glm::lookAt(
+        glm::vec3(100.0f), 
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
+    auto projectionMatrix = glm::ortho(
+        (float) -globalWindow.width / 2, 
+        (float) globalWindow.width / 2,
+        (float) -globalWindow.height / 2, 
+        (float) globalWindow.height / 2, .1f,
+        1000.0f
+    );
+
+    TilemapShader shader = createTilemapShader("../shader/vert.glsl", "../shader/frag.glsl");
 
     Texture tileset = loadTexture("../assets/tileset.png");
     createTilemapBuffers();
@@ -116,9 +136,12 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        useShader(&shader);
+        useShader(shader.id);
+        setUniformMat4(shader.uniformModel, &modelMatrix);
+        setUniformMat4(shader.uniformView, &viewMatrix);
+        setUniformMat4(shader.uniformProjection, &projectionMatrix);
+        
         bindTexture(tileset);
-
         glBindVertexArray(tilemapVao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
