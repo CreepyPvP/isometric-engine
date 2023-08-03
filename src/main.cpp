@@ -43,23 +43,24 @@ internal void initWindow() {
 
 internal void createTilemapBuffers() {
     float vertices[] = {
-        -0.5,  -0.5,  0,
-        -0.5,   0.5,  0,
-         0.5,  -0.5,  0,
-         0.5,   0.5,  0
+        0, 0, 0,
+        0, 1, 0,
+        1, 0, 0,
+        1, 1, 0
     };
 
     unsigned int indices[] = {
-        0, 1, 2, 2, 1, 3
+        0, 1, 2, 
+        2, 1, 3
     };
 
     int width = 3;
     int height = 3;
 
     byte tileData[9] = {
-        0, 255, 0,
-        255, 0, 255,
-        0, 255, 0
+        0, 1, 0,
+        1, 0, 1,
+        0, 1, 0
     };
 
     int indexCount = 6;
@@ -89,6 +90,7 @@ internal void createTilemapBuffers() {
 
     // tile data
     glEnableVertexAttribArray(1);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, tileDataBuffer);
 
     glBindVertexArray(0);
 }
@@ -103,7 +105,7 @@ int main() {
 
     Shader shader = createShader("../shader/vert.glsl", "../shader/frag.glsl");
 
-
+    Texture tileset = loadTexture("../assets/tileset.png");
     createTilemapBuffers();
 
     while (!glfwWindowShouldClose(globalWindow.handle)) {
@@ -115,6 +117,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         useShader(&shader);
+        bindTexture(tileset);
 
         glBindVertexArray(tilemapVao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

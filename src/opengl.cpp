@@ -5,6 +5,9 @@
 #include <fstream>
 #include <sstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define internal static
 
 
@@ -74,6 +77,34 @@ void useShader(Shader *shader) {
 }
 
 void setUniformMat4(unsigned int uniformId, glm::mat4 *matrix) {
-  glUniformMatrix4fv(uniformId, 1, GL_FALSE, &(*matrix)[0][0]);
+    glUniformMatrix4fv(uniformId, 1, GL_FALSE, &(*matrix)[0][0]);
 }
 
+Texture loadTexture(std::string file) {
+    Texture texture;
+    glGenTextures(1, &texture);
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+    int width, height, nr_channels;
+    unsigned char *data = stbi_load(file.c_str(), &width, &height, &nr_channels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        stbi_image_free(data);
+    } else {
+        printf("failed to load texture: %s", file.c_str());
+    }
+
+    return texture;
+}
+
+void bindTexture(Texture texture) {
+    glBindTexture(GL_TEXTURE_2D, texture);
+}
