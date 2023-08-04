@@ -9,11 +9,20 @@ struct TilemapShader {
     unsigned int uniformProjection;
 };
 
+struct LightingShader {
+    unsigned int id;
+    unsigned int gPosition;
+    unsigned int gNormal;
+    unsigned int gAlbedo;
+};
+
 TilemapShader createTilemapShader(std::string vertex, std::string fragment);
 
-void setUniformMat4(unsigned int uniformId, glm::mat4* matrix);
+LightingShader createLightingShader(std::string vertex, std::string fragment);
 
 void useShader(unsigned int id);
+
+void setUniformMat4(unsigned int uniformId, glm::mat4* matrix);
 
 typedef unsigned int Texture;
 

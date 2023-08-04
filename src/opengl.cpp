@@ -24,10 +24,7 @@ internal std::string readFile(std::string file) {
     return "";
 }
 
-
-TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
-    TilemapShader shader;
-
+internal unsigned int createShader(std::string vFile, std::string fFile) {
     std::string vRaw = readFile(vFile);
     std::string fRaw = readFile(fFile);
 
@@ -56,22 +53,47 @@ TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
         printf("Error compiling fragment shader: %s\n", infoLog);
     }
 
-    shader.id = glCreateProgram();
-    glAttachShader(shader.id, vertex);
-    glAttachShader(shader.id, fragment);
-    glLinkProgram(shader.id);
-    glGetProgramiv(shader.id, GL_LINK_STATUS, &success);
+    unsigned int shaderId = glCreateProgram();
+    glAttachShader(shaderId, vertex);
+    glAttachShader(shaderId, fragment);
+    glLinkProgram(shaderId);
+    glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
     if(!success) {
-        glGetProgramInfoLog(shader.id, 512, NULL, infoLog);
+        glGetProgramInfoLog(shaderId, 512, NULL, infoLog);
         printf("Error linking shader: %s", infoLog);
     }
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
+    return shaderId;
+}
+
+TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
+    TilemapShader shader;
+
+    shader.id = createShader(vFile, fFile);
+
     shader.uniformModel = glGetUniformLocation(shader.id, "model");
     shader.uniformView = glGetUniformLocation(shader.id, "view");
     shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
+
+    return shader;
+}
+
+LightingShader createLightingShader(std::string vFile, std::string fFile) {
+    LightingShader shader;
+
+    shader.id = createShader(vFile, fFile);
+
+    shader.gPosition = glGetUniformLocation(shader.id, "gPosition");
+    shader.gNormal = glGetUniformLocation(shader.id, "gNormal");
+    shader.gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
+
+    useShader(shader.id);
+    glUniform1i(shader.gPosition, 0);
+    glUniform1i(shader.gNormal, 1);
+    glUniform1i(shader.gAlbedo, 2);
 
     return shader;
 }

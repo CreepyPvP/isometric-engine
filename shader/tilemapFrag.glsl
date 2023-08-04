@@ -12,10 +12,11 @@ uniform sampler2D tileset;
 layout(binding = 1) readonly buffer InputData {
     byte tiles[];
 };
-
 in vec2 pos;
 
-out vec4 out_Color;
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec3 gAlbedo;
 
 void main() {
     float tilemapX = pos.x * width;
@@ -40,5 +41,8 @@ void main() {
         tileBaseUVX + (tileUVY / float(tilesetHeight))
     );
 
-	out_Color = texture(tileset, uv);
+    // TODO: fill out properly
+    gPosition = vec3(0, 1, 0);
+    gNormal = vec3(1, 0, 0);
+	gAlbedo = texture(tileset, uv).xyz;
 }
