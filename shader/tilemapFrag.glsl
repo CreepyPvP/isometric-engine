@@ -8,6 +8,7 @@
 uniform sampler2D tileset;
 uniform int width;
 uniform int height;
+uniform int tileDataOffset;
 
 layout(binding = 1) readonly buffer InputData {
     byte tiles[];
@@ -26,7 +27,7 @@ void main() {
     int gridY = int(floor(tilemapY));
 
     int tileIndex = gridX + gridY * width;
-    int tileValue = int(tiles[tileIndex]);
+    int tileValue = int(tiles[tileIndex + tileDataOffset]);
 
     int tileX = int(mod(tileValue, tilesetWidth));
     int tileY = (tileValue - tileX) / tilesetWidth;

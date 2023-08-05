@@ -10,6 +10,7 @@ struct TilemapShader {
     unsigned int uniformProjection;
     unsigned int uniformWidth;
     unsigned int uniformHeight;
+    unsigned int uniformTileDataOffset;
 };
 
 struct LightingShader {

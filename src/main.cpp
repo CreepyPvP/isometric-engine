@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <opengl.hpp>
+#include <chunk.hpp>
 
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -25,8 +26,8 @@ global_variable unsigned int gPosition;
 global_variable unsigned int gNormal;
 global_variable unsigned int gAlbedo;
 
-global_variable unsigned int tilemapVao;
 global_variable unsigned int squareVao;
+global_variable Chunk chunk;
 
 
 internal void frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
@@ -49,64 +50,6 @@ internal void initWindow() {
     }
     glfwMakeContextCurrent(globalWindow.handle);
     glfwSetFramebufferSizeCallback(globalWindow.handle, frameBufferResizeCallback);
-}
-
-internal void createTilemapBuffers() {
-    float vertices[] = {
-        0, 0, 0,
-        0, 1, 0,
-        1, 0, 0,
-        1, 1, 0
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2, 
-        2, 1, 3
-    };
-
-    int width = 3;
-    int height = 6;
-
-    byte tileData[] = {
-        1, 1, 0,
-        1, 0, 1,
-        0, 1, 0,
-
-        0, 1, 0,
-        1, 0, 1,
-        0, 1, 0
-    };
-
-    int indexCount = 6;
-    int vertexCount = 4;
-
-    glGenVertexArrays(1, &tilemapVao);
-    glBindVertexArray(tilemapVao);
-
-    unsigned int buffers[3];
-    glGenBuffers(3, buffers);
-    unsigned int vertexBuffer = buffers[0];
-    unsigned int indexBuffer = buffers[1];
-    unsigned int tileDataBuffer = buffers[2];
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount * 3, &vertices[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexCount, &indices[0], GL_STATIC_DRAW);
-    
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, tileDataBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(byte) * width * height, &tileData[0], GL_STATIC_DRAW);
-
-    // position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 3, 0);
-
-    // tile data
-    glEnableVertexAttribArray(1);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, tileDataBuffer);
-
-    glBindVertexArray(0);
 }
 
 internal void setupSquareVao() {
@@ -169,20 +112,37 @@ internal void setupGBuffer() {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
 }
 
+void setupChunk() {
+    chunk = createChunk(5);
+
+    byte ground[64];
+    for (int i = 0; i < 64; ++i) {
+        ground[i] = 0;
+    }
+    chunk.createTilemap(8, 8, ground, glm::vec3(0, 0, 0), glm::vec3(90.0f, 0, 0));
+
+    byte wall[] = { 1, 1, 1 };
+    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, -100), glm::vec3(180, 0, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, 100), glm::vec3(180, 90, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, -400), glm::vec3(180, 0, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, 400), glm::vec3(180, 90, 0));
+
+    chunk.build();
+}
+
 int main() {
     initWindow();
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         printf("failed to load required extensions");
     }
+    glEnable(GL_DEPTH_TEST);
     glCullFace(GL_NONE);
 
     setupGBuffer();
     setupSquareVao();
+    setupChunk();
 
-    auto modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(100.0f * 3, 100.0f * 6, 1.0f));
     auto viewMatrix = glm::lookAt(
         glm::vec3(1000.0f), 
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -200,7 +160,6 @@ int main() {
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
 
     Texture tileset = loadTexture("../assets/tileset.png");
-    createTilemapBuffers();
 
     while (!glfwWindowShouldClose(globalWindow.handle)) {
         if (glfwGetKey(globalWindow.handle, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -213,18 +172,14 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Setup tilemap shader
-        useShader(tilemapShader.id);
-        setUniformMat4(tilemapShader.uniformModel, &modelMatrix);
-        setUniformMat4(tilemapShader.uniformView, &viewMatrix);
-        setUniformMat4(tilemapShader.uniformProjection, &projectionMatrix);
-        setUniform1i(tilemapShader.uniformWidth, 3);
-        setUniform1i(tilemapShader.uniformHeight, 6);
-        
-        // Tilemap rendering
         glActiveTexture(GL_TEXTURE0);
         bindTexture(tileset);
-        glBindVertexArray(tilemapVao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        useShader(tilemapShader.id);
+        setUniformMat4(tilemapShader.uniformView, &viewMatrix);
+        setUniformMat4(tilemapShader.uniformProjection, &projectionMatrix);
+
+        // call chunk.render() here
+        chunk.render(&tilemapShader);
 
         // Setup default framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

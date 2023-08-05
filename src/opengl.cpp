@@ -79,6 +79,7 @@ TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
     shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
     shader.uniformWidth = glGetUniformLocation(shader.id, "width");
     shader.uniformHeight = glGetUniformLocation(shader.id, "height");
+    shader.uniformTileDataOffset = glGetUniformLocation(shader.id, "tileDataOffset");
 
     return shader;
 }
