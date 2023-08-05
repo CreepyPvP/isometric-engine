@@ -44,10 +44,17 @@ void Chunk::createTilemap(int width, int height, byte* tileData, glm::vec3 posit
 
 void Chunk::build() {
     float vertices[] = {
-        0, 0, 0,
-        0, 1, 0,
-        1, 0, 0,
-        1, 1, 0
+        0, 0, 0,    // position 1
+        0, 0, 1,    // normal 1
+
+        0, 1, 0,    // position 2
+        0, 0, 1,    // normal 2
+
+        1, 0, 0,    // position 3
+        0, 0, 1,    // normal 3
+
+        1, 1, 0,    // position 4
+        0, 0, 1,    // normal 4
     };
 
     unsigned int indices[] = {
@@ -82,7 +89,7 @@ void Chunk::build() {
     unsigned int tileDataBuffer = buffers[2];
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount * 3, &vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount * 6, &vertices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexCount, &indices[0], GL_STATIC_DRAW);
@@ -91,11 +98,16 @@ void Chunk::build() {
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(byte) * tileCount, &tileData[0], GL_STATIC_DRAW);
 
     // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 6, 0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 3, 0);
+
+    // normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 6, (void*) (sizeof(int) * 3));
+    glEnableVertexAttribArray(1);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 6, (GLvoid*) (sizeof(int) * 3));
 
     // tile data
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, tileDataBuffer);
 
     glBindVertexArray(0);

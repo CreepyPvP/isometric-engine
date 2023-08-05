@@ -10,12 +10,13 @@ uniform int width;
 uniform int height;
 uniform int tileDataOffset;
 
-layout(binding = 1) readonly buffer InputData {
+layout(binding = 2) readonly buffer InputData {
     byte tiles[];
 };
 
 in vec2 modelPos;
 in vec3 worldPos;
+in vec3 normal;
 
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
@@ -46,7 +47,9 @@ void main() {
 
     // TODO: fill out properly
     gPosition = worldPos;
-    gNormal = vec3(1, 0, 0);
+    gNormal = normalize(normal);
+    if (gNormal.x + gNormal.y + gNormal.z < 0) {
+        gNormal = -gNormal;
+    }
 	gAlbedo = texture(tileset, uv).xyz;
-	// gAlbedo = vec3(uv, 0.0);
 }
