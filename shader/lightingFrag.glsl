@@ -12,6 +12,6 @@ void main() {
     float uvX = (screenPos.x + 1) / 2;
     float uvY = (screenPos.y + 1) / 2;
 
-    out_Color = texture(gAlbedo, vec2(uvX, uvY));
+    out_Color = texture(gPosition, vec2(uvX, uvY));
     // out_Color = vec4(uvX, uvY, 0, 1);
 }
