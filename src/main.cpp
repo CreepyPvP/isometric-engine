@@ -65,9 +65,13 @@ internal void createTilemapBuffers() {
     };
 
     int width = 3;
-    int height = 3;
+    int height = 6;
 
-    byte tileData[9] = {
+    byte tileData[] = {
+        1, 1, 0,
+        1, 0, 1,
+        0, 1, 0,
+
         0, 1, 0,
         1, 0, 1,
         0, 1, 0
@@ -177,11 +181,10 @@ int main() {
     setupSquareVao();
 
     auto modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-500.0f, 0.0f, 0.0f));
     modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(400.0f, 400.0f, 1.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(100.0f * 3, 100.0f * 6, 1.0f));
     auto viewMatrix = glm::lookAt(
-        glm::vec3(100.0f), 
+        glm::vec3(1000.0f), 
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
@@ -190,7 +193,7 @@ int main() {
         (float) globalWindow.width / 2,
         (float) -globalWindow.height / 2, 
         (float) globalWindow.height / 2, .1f,
-        1000.0f
+        100000.0f
     );
 
     TilemapShader tilemapShader = createTilemapShader("../shader/tilemapVert.glsl", "../shader/tilemapFrag.glsl");
@@ -214,6 +217,8 @@ int main() {
         setUniformMat4(tilemapShader.uniformModel, &modelMatrix);
         setUniformMat4(tilemapShader.uniformView, &viewMatrix);
         setUniformMat4(tilemapShader.uniformProjection, &projectionMatrix);
+        setUniform1i(tilemapShader.uniformWidth, 3);
+        setUniform1i(tilemapShader.uniformHeight, 6);
         
         // Tilemap rendering
         glActiveTexture(GL_TEXTURE0);

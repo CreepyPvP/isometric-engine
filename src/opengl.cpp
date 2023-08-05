@@ -77,6 +77,8 @@ TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
     shader.uniformModel = glGetUniformLocation(shader.id, "model");
     shader.uniformView = glGetUniformLocation(shader.id, "view");
     shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
+    shader.uniformWidth = glGetUniformLocation(shader.id, "width");
+    shader.uniformHeight = glGetUniformLocation(shader.id, "height");
 
     return shader;
 }
@@ -106,6 +108,10 @@ void setUniformMat4(unsigned int uniformId, glm::mat4 *matrix) {
     glUniformMatrix4fv(uniformId, 1, GL_FALSE, &(*matrix)[0][0]);
 }
 
+void setUniform1i(unsigned int uniformId, unsigned int value) {
+    glUniform1i(uniformId, value);
+}
+
 Texture loadTexture(std::string file) {
     Texture texture;
     glGenTextures(1, &texture);
@@ -116,11 +122,10 @@ Texture loadTexture(std::string file) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-
     int width, height, nr_channels;
     unsigned char *data = stbi_load(file.c_str(), &width, &height, &nr_channels, 0);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(data);

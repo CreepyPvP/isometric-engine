@@ -1,13 +1,13 @@
 #version 440
 
 #define byte unsigned char
-#define width 3
-#define height 3
-#define tilesetWidth 73
-#define tilesetHeight 16
-#define tileSize 48
+#define tilesetWidth 10
+#define tilesetHeight 5
+#define tileSize 32
 
 uniform sampler2D tileset;
+uniform int width;
+uniform int height;
 
 layout(binding = 1) readonly buffer InputData {
     byte tiles[];
@@ -38,11 +38,12 @@ void main() {
 
     vec2 uv = vec2(
         tileBaseUVX + (tileUVX / float(tilesetWidth)),
-        tileBaseUVX + (tileUVY / float(tilesetHeight))
+        tileBaseUVY + (tileUVY / float(tilesetHeight))
     );
 
     // TODO: fill out properly
     gPosition = vec3(0, 1, 0);
     gNormal = vec3(1, 0, 0);
 	gAlbedo = texture(tileset, uv).xyz;
+	// gAlbedo = vec3(uv, 0.0);
 }
