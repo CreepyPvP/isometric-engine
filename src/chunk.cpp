@@ -55,11 +55,30 @@ void Chunk::build() {
 
         1, 1, 0,    // position 4
         0, 0, 1,    // normal 4
+
+
+        // this is kinda stupid ngl
+        // render a second set of triangles with flipped normals
+        // and clockwise vertex order
+        0, 0, 0,    // position 1
+        0, 0, -1,    // normal 1
+
+        0, 1, 0,    // position 2
+        0, 0, -1,    // normal 2
+
+        1, 0, 0,    // position 3
+        0, 0, -1,    // normal 3
+
+        1, 1, 0,    // position 4
+        0, 0, -1,    // normal 4
     };
 
     unsigned int indices[] = {
         0, 1, 2, 
-        2, 1, 3
+        2, 1, 3,
+
+        4, 6, 5, 
+        6, 7, 5
     };
 
     int tileCount = 0;
@@ -76,8 +95,8 @@ void Chunk::build() {
         tilemaps[tilemap].tileData = nullptr;
     }
 
-    int indexCount = 6;
-    int vertexCount = 4;
+    int indexCount = 12;
+    int vertexCount = 8;
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -127,7 +146,7 @@ void Chunk::render(TilemapShader* shader) {
         setUniform1i(shader->uniformWidth, width);
         setUniform1i(shader->uniformHeight, height);
         setUniform1i(shader->uniformTileDataOffset, offset);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
         offset += width * height;
     }

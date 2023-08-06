@@ -137,7 +137,10 @@ int main() {
         printf("failed to load required extensions");
     }
     glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_NONE);
+    // culling
+    glFrontFace(GL_CW);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
 
     setupGBuffer();
     setupSquareVao();
