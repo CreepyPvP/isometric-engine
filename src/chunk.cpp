@@ -4,7 +4,7 @@
 #include <chunk.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define tileSize 100
+#define tileSize 1
 #define byte unsigned char
 
 Chunk createChunk(int capactiy) {

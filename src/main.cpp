@@ -122,10 +122,10 @@ void setupChunk() {
     chunk.createTilemap(8, 8, ground, glm::vec3(0, 0, 0), glm::vec3(90.0f, 0, 0));
 
     byte wall[] = { 1, 1, 1 };
-    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, -100), glm::vec3(180, 0, 0));
-    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, 100), glm::vec3(180, 90, 0));
-    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, -400), glm::vec3(180, 0, 0));
-    chunk.createTilemap(3, 1, wall, glm::vec3(100, -100, 400), glm::vec3(180, 90, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, -1), glm::vec3(180, 0, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, 1), glm::vec3(180, 90, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, -4), glm::vec3(180, 0, 0));
+    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, 4), glm::vec3(180, 90, 0));
 
     chunk.build();
 }
@@ -152,10 +152,11 @@ int main() {
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
     auto projectionMatrix = glm::ortho(
-        (float) -globalWindow.width / 2, 
-        (float) globalWindow.width / 2,
-        (float) -globalWindow.height / 2, 
-        (float) globalWindow.height / 2, .1f,
+        (float) -globalWindow.width / 2 / 100, 
+        (float) globalWindow.width / 2 / 100,
+        (float) -globalWindow.height / 2 / 100, 
+        (float) globalWindow.height / 2 / 100, 
+        .1f,
         100000.0f
     );
 
@@ -164,7 +165,7 @@ int main() {
 
     Texture tileset = loadTexture("../assets/tileset.png");
 
-    auto lightPos = glm::vec3(250, 150, 250);
+    auto lightPos = glm::vec3(2, 1.5, 2);
     auto lightColor = glm::vec3(1, 1, 1);
 
     while (!glfwWindowShouldClose(globalWindow.handle)) {

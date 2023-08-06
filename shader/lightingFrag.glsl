@@ -1,6 +1,6 @@
 #version 440
 
-#define lightDropoff 100000
+#define lightDropoff 10
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -32,6 +32,4 @@ void main() {
     }
 
     out_Color = texture(gAlbedo, uv) * vec4(lightInfluence, 1);
-    // out_Color = vec4(lightColors[0], 1);
-    // out_Color = vec4(uvX, uvY, 0, 1);
 }
