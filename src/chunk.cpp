@@ -98,16 +98,14 @@ void Chunk::build() {
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(byte) * tileCount, &tileData[0], GL_STATIC_DRAW);
 
     // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 6, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
     glEnableVertexAttribArray(0);
 
     // normal
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 6, (void*) (sizeof(int) * 3));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*) (sizeof(float) * 3));
     glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(int) * 6, (GLvoid*) (sizeof(int) * 3));
 
     // tile data
-    glEnableVertexAttribArray(2);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, tileDataBuffer);
 
     glBindVertexArray(0);

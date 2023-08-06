@@ -10,7 +10,7 @@ uniform int width;
 uniform int height;
 uniform int tileDataOffset;
 
-layout(binding = 2) readonly buffer InputData {
+layout(binding = 1) readonly buffer InputData {
     byte tiles[];
 };
 
@@ -48,8 +48,8 @@ void main() {
     // TODO: fill out properly
     gPosition = worldPos;
     gNormal = normalize(normal);
-    if (gNormal.x + gNormal.y + gNormal.z < 0) {
-        gNormal = -gNormal;
-    }
+    // if (gNormal.x + gNormal.y + gNormal.z < 0) {
+    //     gNormal = -gNormal;
+    // }
 	gAlbedo = texture(tileset, uv).xyz;
 }
