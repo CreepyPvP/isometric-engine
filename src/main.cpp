@@ -164,6 +164,9 @@ int main() {
 
     Texture tileset = loadTexture("../assets/tileset.png");
 
+    auto lightPos = glm::vec3(250, 150, 250);
+    auto lightColor = glm::vec3(1, 1, 1);
+
     while (!glfwWindowShouldClose(globalWindow.handle)) {
         if (glfwGetKey(globalWindow.handle, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(globalWindow.handle, true);
@@ -196,8 +199,11 @@ int main() {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedo);
 
-        glBindVertexArray(squareVao);
         useShader(lightingShader.id);
+        setUniformVec3(lightingShader.uniformLightPos, &lightPos);
+        setUniformVec3(lightingShader.uniformLightColor, &lightColor);
+        glBindVertexArray(squareVao);
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(globalWindow.handle);

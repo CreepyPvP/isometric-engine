@@ -92,6 +92,8 @@ LightingShader createLightingShader(std::string vFile, std::string fFile) {
     shader.gPosition = glGetUniformLocation(shader.id, "gPosition");
     shader.gNormal = glGetUniformLocation(shader.id, "gNormal");
     shader.gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
+    shader.uniformLightPos = glGetUniformLocation(shader.id, "lightPositions");
+    shader.uniformLightColor = glGetUniformLocation(shader.id, "lightColors");
 
     useShader(shader.id);
     glUniform1i(shader.gPosition, 0);
@@ -111,6 +113,10 @@ void setUniformMat4(unsigned int uniformId, glm::mat4 *matrix) {
 
 void setUniform1i(unsigned int uniformId, unsigned int value) {
     glUniform1i(uniformId, value);
+}
+
+void setUniformVec3(unsigned int uniformId, glm::vec3* vec) {
+    glUniform3fv(uniformId, 1, &(vec->x));
 }
 
 Texture loadTexture(std::string file) {
