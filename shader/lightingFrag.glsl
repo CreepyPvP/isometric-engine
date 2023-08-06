@@ -1,5 +1,7 @@
 #version 440
 
+#define lightDropoff 100000
+
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
@@ -22,9 +24,11 @@ void main() {
     vec3 lightInfluence = vec3(0.1, 0.1, 0.1);
     for (int i = 0; i < 1; ++i) {
         vec3 lightToSelf = worldPos - lightPositions[i];
-        float alignment = max(0, -dot(normal, normalize(lightToSelf)));
+        float alignmentMod = max(0, -dot(normal, normalize(lightToSelf)));
+        float distanceMod = 
+            1 / (1 + (pow(lightToSelf.x, 2) + pow(lightToSelf.y, 2) + pow(lightToSelf.z, 2)) / lightDropoff);
 
-        lightInfluence += alignment * lightColors[i];
+        lightInfluence += alignmentMod * distanceMod * lightColors[i];
     }
 
     out_Color = texture(gAlbedo, uv) * vec4(lightInfluence, 1);
