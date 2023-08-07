@@ -151,3 +151,14 @@ void Chunk::render(TilemapShader* shader) {
         offset += width * height;
     }
 }
+
+void Chunk::renderShadowPass(ShadowShader* shader) {
+    assert(vao != -1);
+
+    glBindVertexArray(vao);
+
+    for (int i = 0; i < tilemapCount; ++i) {
+        setUniformMat4(shader->uniformModel, &tilemaps[i].transform);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+    }
+}

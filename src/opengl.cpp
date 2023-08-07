@@ -92,13 +92,27 @@ LightingShader createLightingShader(std::string vFile, std::string fFile) {
     shader.gPosition = glGetUniformLocation(shader.id, "gPosition");
     shader.gNormal = glGetUniformLocation(shader.id, "gNormal");
     shader.gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
+    shader.shadowMap = glGetUniformLocation(shader.id, "shadowMap");
     shader.uniformLightPos = glGetUniformLocation(shader.id, "lightPositions");
     shader.uniformLightColor = glGetUniformLocation(shader.id, "lightColors");
+    shader.uniformLightSpace = glGetUniformLocation(shader.id, "lightSpace");
 
     useShader(shader.id);
     glUniform1i(shader.gPosition, 0);
     glUniform1i(shader.gNormal, 1);
     glUniform1i(shader.gAlbedo, 2);
+    glUniform1i(shader.shadowMap, 3);
+
+    return shader;
+}
+
+ShadowShader createShadowShader(std::string vFile, std::string fFile) {
+    ShadowShader shader;
+
+    shader.id = createShader(vFile, fFile);
+
+    shader.uniformModel = glGetUniformLocation(shader.id, "model");
+    shader.uniformLightSpace = glGetUniformLocation(shader.id, "lightSpace");
 
     return shader;
 }

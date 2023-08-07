@@ -18,14 +18,24 @@ struct LightingShader {
     unsigned int gPosition;
     unsigned int gNormal;
     unsigned int gAlbedo;
+    unsigned int shadowMap;
+    unsigned int uniformLightSpace;
 
     unsigned int uniformLightPos;
     unsigned int uniformLightColor;
 };
 
+struct ShadowShader {
+    unsigned int id;
+    unsigned int uniformLightSpace;
+    unsigned int uniformModel;
+};
+
 TilemapShader createTilemapShader(std::string vertex, std::string fragment);
 
 LightingShader createLightingShader(std::string vertex, std::string fragment);
+
+ShadowShader createShadowShader(std::string vertex, std::string fragment);
 
 void useShader(unsigned int id);
 

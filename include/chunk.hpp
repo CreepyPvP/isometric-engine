@@ -21,7 +21,9 @@ struct Chunk {
     void createTilemap(int width, int height, unsigned char* tileData, glm::vec3 position, glm::vec3 rotation);
     void dispose();
     void build();
+
     void render(TilemapShader* shader);
+    void renderShadowPass(ShadowShader* shader);
 };
 
 Chunk createChunk(int capactiy); 

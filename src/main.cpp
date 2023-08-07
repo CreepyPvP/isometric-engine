@@ -26,12 +26,22 @@ global_variable unsigned int gPosition;
 global_variable unsigned int gNormal;
 global_variable unsigned int gAlbedo;
 
+// fbo
+global_variable unsigned int shadowBuffer;
+// depth buffer
+global_variable unsigned int shadowMap;
+global_variable glm::mat4 lightSpace;
+
 global_variable unsigned int squareVao;
 global_variable Chunk chunk;
 
 
-internal void frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
+internal void updateViewport(int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+internal void frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
+    updateViewport(width, height);
     globalWindow.width = width;
     globalWindow.height = height;
 }
@@ -44,7 +54,7 @@ internal void initWindow() {
 
     globalWindow.width = 1280;
     globalWindow.height = 720;
-    globalWindow.handle = glfwCreateWindow(globalWindow.width, globalWindow.height, "My Game", NULL, NULL);
+    globalWindow.handle = glfwCreateWindow(globalWindow.width, globalWindow.height, "Isometric engine", NULL, NULL);
     if (!globalWindow.handle) {
         printf("Failed to create window\n");
     }
@@ -112,7 +122,32 @@ internal void setupGBuffer() {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
 }
 
-void setupChunk() {
+internal void setupShadowMap() {
+    glGenFramebuffers(1, &shadowBuffer);
+    const unsigned int shadowWidth = 1024, shadowHeight = 1024;
+    glGenTextures(1, &shadowMap);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
+            shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_BUFFER);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    float nearPlane = 0.1f;
+    float farPlane = 17;
+    auto lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+    auto lightView = glm::lookAt(glm::vec3(5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    lightSpace = lightProjection * lightView;
+}
+
+internal void setupChunk() {
     chunk = createChunk(5);
 
     byte ground[64];
@@ -144,10 +179,11 @@ int main() {
 
     setupGBuffer();
     setupSquareVao();
+    setupShadowMap();
     setupChunk();
 
     auto viewMatrix = glm::lookAt(
-        glm::vec3(1000.0f), 
+        glm::vec3(1000, 1000, -1000), 
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
@@ -157,21 +193,32 @@ int main() {
         (float) -globalWindow.height / 2 / 100, 
         (float) globalWindow.height / 2 / 100, 
         .1f,
-        100000.0f
+        10000.0f
     );
 
     TilemapShader tilemapShader = createTilemapShader("../shader/tilemapVert.glsl", "../shader/tilemapFrag.glsl");
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
+    ShadowShader shadowShader = createShadowShader("../shader/shadowVert.glsl", "../shader/shadowFrag.glsl");
 
     Texture tileset = loadTexture("../assets/tileset.png");
 
-    auto lightPos = glm::vec3(2, 1.5, 2);
+    auto lightPos = glm::vec3(5);
     auto lightColor = glm::vec3(1, 1, 1);
 
     while (!glfwWindowShouldClose(globalWindow.handle)) {
         if (glfwGetKey(globalWindow.handle, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(globalWindow.handle, true);
         }
+
+        // Render shadow map
+        glViewport(0, 0, 1024, 1024);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        useShader(shadowShader.id);
+        setUniformMat4(shadowShader.uniformLightSpace, &lightSpace);
+        chunk.renderShadowPass(&shadowShader);
+
+        updateViewport(globalWindow.width, globalWindow.height);
 
         // Setup geometry buffer
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -199,10 +246,13 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, gNormal);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedo);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, shadowMap);
 
         useShader(lightingShader.id);
         setUniformVec3(lightingShader.uniformLightPos, &lightPos);
         setUniformVec3(lightingShader.uniformLightColor, &lightColor);
+        setUniformMat4(lightingShader.uniformLightSpace, &lightSpace);
         glBindVertexArray(squareVao);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
