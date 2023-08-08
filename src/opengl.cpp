@@ -106,6 +106,18 @@ LightingShader createLightingShader(std::string vFile, std::string fFile) {
     return shader;
 }
 
+ObjectShader createObjectShader(std::string vFile, std::string fFile) {
+    ObjectShader shader;
+
+    shader.id = createShader(vFile, fFile);
+
+    shader.uniformModel = glGetUniformLocation(shader.id, "model");
+    shader.uniformView = glGetUniformLocation(shader.id, "view");
+    shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
+
+    return shader;
+}
+
 ShadowShader createShadowShader(std::string vFile, std::string fFile) {
     ShadowShader shader;
 

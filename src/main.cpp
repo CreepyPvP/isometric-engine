@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include <opengl.hpp>
-#include <chunk.hpp>
+#include <mesh_gen.hpp>
 
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,8 +11,6 @@
 
 #define internal static 
 #define global_variable static 
-
-typedef unsigned char byte;
 
 struct Window {
     int width;
@@ -33,7 +31,8 @@ global_variable unsigned int shadowMap;
 global_variable glm::mat4 lightSpace;
 
 global_variable unsigned int squareVao;
-global_variable Chunk chunk;
+
+global_variable Mesh chunkMesh;
 
 
 internal void updateViewport(int width, int height) {
@@ -131,8 +130,10 @@ internal void setupShadowMap() {
             shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
     
     glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
@@ -147,22 +148,9 @@ internal void setupShadowMap() {
     lightSpace = lightProjection * lightView;
 }
 
-internal void setupChunk() {
-    chunk = createChunk(5);
-
-    byte ground[64];
-    for (int i = 0; i < 64; ++i) {
-        ground[i] = 0;
-    }
-    chunk.createTilemap(8, 8, ground, glm::vec3(0, 0, 0), glm::vec3(90.0f, 0, 0));
-
-    byte wall[] = { 1, 1, 1 };
-    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, -1), glm::vec3(180, 0, 0));
-    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, 1), glm::vec3(180, 90, 0));
-    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, -4), glm::vec3(180, 0, 0));
-    chunk.createTilemap(3, 1, wall, glm::vec3(1, -1, 4), glm::vec3(180, 90, 0));
-
-    chunk.build();
+internal void setupGeometry() {
+    byte data[] = {0, 0, 0, 0, 0, 0, 0, 0};
+    chunkMesh = generateVoxelMesh(2, 2, 2, data, 10, 5);
 }
 
 int main() {
@@ -174,16 +162,17 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     // culling
     glFrontFace(GL_CW);
-    glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
 
     setupGBuffer();
     setupSquareVao();
     setupShadowMap();
-    setupChunk();
+    setupGeometry();
+
+    auto modelMatrix = glm::mat4(1);
 
     auto viewMatrix = glm::lookAt(
-        glm::vec3(1000, 1000, -1000), 
+        glm::vec3(1000, 1000, 1000), 
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
@@ -196,7 +185,7 @@ int main() {
         10000.0f
     );
 
-    TilemapShader tilemapShader = createTilemapShader("../shader/tilemapVert.glsl", "../shader/tilemapFrag.glsl");
+    ObjectShader objectShader = createObjectShader("../shader/objectVert.glsl", "../shader/objectFrag.glsl");
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
     ShadowShader shadowShader = createShadowShader("../shader/shadowVert.glsl", "../shader/shadowFrag.glsl");
 
@@ -211,29 +200,35 @@ int main() {
         }
 
         // Render shadow map
-        glViewport(0, 0, 1024, 1024);
+        glCullFace(GL_FRONT);
+        updateViewport(1024, 1024);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
         glClear(GL_DEPTH_BUFFER_BIT);
         useShader(shadowShader.id);
         setUniformMat4(shadowShader.uniformLightSpace, &lightSpace);
-        chunk.renderShadowPass(&shadowShader);
+
+        glBindVertexArray(chunkMesh.vao);
+        glDrawElements(GL_TRIANGLES, chunkMesh.indexCount, GL_UNSIGNED_INT, 0);
 
         updateViewport(globalWindow.width, globalWindow.height);
+        glCullFace(GL_BACK);
 
         // Setup geometry buffer
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Setup tilemap shader
+        // Setup shader
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glActiveTexture(GL_TEXTURE0);
         bindTexture(tileset);
-        useShader(tilemapShader.id);
-        setUniformMat4(tilemapShader.uniformView, &viewMatrix);
-        setUniformMat4(tilemapShader.uniformProjection, &projectionMatrix);
+        useShader(objectShader.id);
+        setUniformMat4(objectShader.uniformView, &viewMatrix);
+        setUniformMat4(objectShader.uniformProjection, &projectionMatrix);
 
-        // call chunk.render() here
-        chunk.render(&tilemapShader);
+        setUniformMat4(objectShader.uniformModel, &modelMatrix);
+        glBindVertexArray(chunkMesh.vao);
+        glDrawElements(GL_TRIANGLES, chunkMesh.indexCount, GL_UNSIGNED_INT, 0);
 
         // Setup default framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -249,6 +244,7 @@ int main() {
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, shadowMap);
 
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         useShader(lightingShader.id);
         setUniformVec3(lightingShader.uniformLightPos, &lightPos);
         setUniformVec3(lightingShader.uniformLightColor, &lightColor);

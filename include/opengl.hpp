@@ -31,11 +31,21 @@ struct ShadowShader {
     unsigned int uniformModel;
 };
 
+struct ObjectShader {
+    unsigned int id;
+    unsigned int uniformModel;
+    unsigned int uniformView;
+    unsigned int uniformProjection;
+    unsigned int texture;
+};
+
 TilemapShader createTilemapShader(std::string vertex, std::string fragment);
 
 LightingShader createLightingShader(std::string vertex, std::string fragment);
 
 ShadowShader createShadowShader(std::string vertex, std::string fragment);
+
+ObjectShader createObjectShader(std::string vertex, std::string fragment);
 
 void useShader(unsigned int id);
 

@@ -1,6 +1,7 @@
 #version 440
 
 #define lightDropoff 100000000
+#define shadowBias 0.005
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -20,7 +21,7 @@ float shadowCalculation(vec4 fragPosLightSpace) {
     projCoords = projCoords * 0.5 + 0.5;
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
-    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+    float shadow = currentDepth - shadowBias > closestDepth ? 1.0 : 0.0;
 
     return shadow;
 }
@@ -46,7 +47,5 @@ void main() {
     }
 
     out_Color = texture(gAlbedo, uv) * vec4(lightInfluence, 1);
-    // out_Color = vec4(0, shadowMod, 0, 1);
-
-    // out_Color = texture(shadowMap, uv);
+    // out_Color = texture(gAlbedo, uv);
 }
