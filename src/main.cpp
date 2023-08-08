@@ -149,8 +149,25 @@ internal void setupShadowMap() {
 }
 
 internal void setupGeometry() {
-    byte data[] = {0, 0, 0, 0, 0, 0, 0, 0};
-    chunkMesh = generateVoxelMesh(2, 2, 2, data, 10, 5);
+    byte* data = (byte*) malloc(8 * 8 * 3);
+
+    byte* ptr = data;
+    for (int y = 0; y < 3; ++y) {
+        for (int z = 0; z < 8; ++z) {
+            for (int x = 0; x < 8; ++x) {
+                if (y == 0) {
+                    *ptr = 0;
+                } else if (x == 2) {
+                    *ptr = 1;
+                } else {
+                    *ptr = 255;
+                }
+                ++ptr;
+            }
+        }
+    }
+    chunkMesh = generateVoxelMesh(8, 3, 8, data, 10, 5);
+    free(data);
 }
 
 int main() {
@@ -172,7 +189,7 @@ int main() {
     auto modelMatrix = glm::mat4(1);
 
     auto viewMatrix = glm::lookAt(
-        glm::vec3(1000, 1000, 1000), 
+        glm::vec3(1000, 1000, -1000), 
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
@@ -207,6 +224,7 @@ int main() {
         useShader(shadowShader.id);
         setUniformMat4(shadowShader.uniformLightSpace, &lightSpace);
 
+        setUniformMat4(shadowShader.uniformModel, &modelMatrix);
         glBindVertexArray(chunkMesh.vao);
         glDrawElements(GL_TRIANGLES, chunkMesh.indexCount, GL_UNSIGNED_INT, 0);
 

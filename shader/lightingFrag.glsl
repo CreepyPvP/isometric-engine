@@ -1,6 +1,6 @@
 #version 440
 
-#define lightDropoff 100000000
+#define lightDropoff 100
 #define shadowBias 0.005
 
 uniform sampler2D gPosition;
@@ -47,5 +47,5 @@ void main() {
     }
 
     out_Color = texture(gAlbedo, uv) * vec4(lightInfluence, 1);
-    // out_Color = texture(gAlbedo, uv);
+    // out_Color = texture(shadowMap, uv);
 }
