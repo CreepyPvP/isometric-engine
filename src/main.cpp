@@ -189,18 +189,11 @@ int main() {
     auto modelMatrix = glm::mat4(1);
 
     auto viewMatrix = glm::lookAt(
-        glm::vec3(1000, 1000, -1000), 
+        glm::vec3(5, 3, 5), 
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     );
-    auto projectionMatrix = glm::ortho(
-        (float) -globalWindow.width / 2 / 100, 
-        (float) globalWindow.width / 2 / 100,
-        (float) -globalWindow.height / 2 / 100, 
-        (float) globalWindow.height / 2 / 100, 
-        .1f,
-        10000.0f
-    );
+    auto projectionMatrix = glm::perspective(45.0f, (float) globalWindow.width / (float) globalWindow.height, 1.0f, 150.0f);
 
     ObjectShader objectShader = createObjectShader("../shader/objectVert.glsl", "../shader/objectFrag.glsl");
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
