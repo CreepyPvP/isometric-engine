@@ -1,6 +1,6 @@
 #pragma once
 
-#define byte unsigned char
+#include <types.hpp>
 
 struct Vertex {
     float x;
@@ -20,4 +20,4 @@ struct Mesh {
     int indexCount;
 };
 
-Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, byte* data, int textureWidth, int textureHeight);
+Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int textureWidth, int textureHeight);

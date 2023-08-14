@@ -41,15 +41,15 @@ internal int getChunkDataOffset(int x, int y, int z, int sizeX, int sizeZ) {
     return x + z * sizeX + y * sizeX * sizeZ;
 }
 
-Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, byte* data, int textureWidth, int textureHeight) {
+Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int textureWidth, int textureHeight) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    byte* ptr = data;
+    uchar* ptr = data;
     for (int y = 0; y < sizeY; ++y) {
         for (int z = 0; z < sizeZ; ++z) {
             for (int x = 0; x < sizeX; ++x) {
-                byte value = *ptr;
+                uchar value = *ptr;
                 if (value == 255) {
                     ++ptr;
                     continue;

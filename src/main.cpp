@@ -1,12 +1,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <opengl.hpp>
 #include <mesh_gen.hpp>
+#include "world.hpp"
 
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 
 #define internal static 
@@ -32,7 +33,7 @@ global_variable glm::mat4 lightSpace;
 
 global_variable unsigned int squareVao;
 
-global_variable Mesh chunkMesh;
+global_variable World world;
 
 
 internal void updateViewport(int width, int height) {
@@ -121,6 +122,33 @@ internal void setupGBuffer() {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
 }
 
+internal void setupWorld() {
+    world = createWorld(1000);
+
+    uchar* data = (uchar*) malloc(8 * 8 * 3);
+
+    uchar* ptr = data;
+    for (int y = 0; y < 3; ++y) {
+        for (int z = 0; z < 8; ++z) {
+            for (int x = 0; x < 8; ++x) {
+                if (y == 0) {
+                    *ptr = 0;
+                } else if (x == 2) {
+                    *ptr = 1;
+                } else {
+                    *ptr = 255;
+                }
+                ++ptr;
+            }
+        }
+    }
+    Mesh chunkMesh = generateVoxelMesh(8, 3, 8, data, 10, 5);
+    Entity entity = world.spawn();
+    world.meshes.insert(entity, chunkMesh);
+    world.transforms.insert(entity, Transform { glm::mat4(1) });
+    free(data);
+}
+
 internal void setupShadowMap() {
     glGenFramebuffers(1, &shadowBuffer);
     const unsigned int shadowWidth = 1024, shadowHeight = 1024;
@@ -148,28 +176,6 @@ internal void setupShadowMap() {
     lightSpace = lightProjection * lightView;
 }
 
-internal void setupGeometry() {
-    byte* data = (byte*) malloc(8 * 8 * 3);
-
-    byte* ptr = data;
-    for (int y = 0; y < 3; ++y) {
-        for (int z = 0; z < 8; ++z) {
-            for (int x = 0; x < 8; ++x) {
-                if (y == 0) {
-                    *ptr = 0;
-                } else if (x == 2) {
-                    *ptr = 1;
-                } else {
-                    *ptr = 255;
-                }
-                ++ptr;
-            }
-        }
-    }
-    chunkMesh = generateVoxelMesh(8, 3, 8, data, 10, 5);
-    free(data);
-}
-
 int main() {
     initWindow();
 
@@ -183,10 +189,8 @@ int main() {
 
     setupGBuffer();
     setupSquareVao();
+    setupWorld();
     setupShadowMap();
-    setupGeometry();
-
-    auto modelMatrix = glm::mat4(1);
 
     auto viewMatrix = glm::lookAt(
         glm::vec3(5, 3, 5), 
@@ -216,10 +220,15 @@ int main() {
         glClear(GL_DEPTH_BUFFER_BIT);
         useShader(shadowShader.id);
         setUniformMat4(shadowShader.uniformLightSpace, &lightSpace);
-
-        setUniformMat4(shadowShader.uniformModel, &modelMatrix);
-        glBindVertexArray(chunkMesh.vao);
-        glDrawElements(GL_TRIANGLES, chunkMesh.indexCount, GL_UNSIGNED_INT, 0);
+        {
+            auto shadowCasters = world.meshes.list();
+            while (shadowCasters.next()) {
+                Transform* transform = world.transforms.get(shadowCasters.entity);
+                setUniformMat4(shadowShader.uniformModel, &transform->mat);
+                glBindVertexArray(shadowCasters.current->vao);
+                glDrawElements(GL_TRIANGLES, shadowCasters.current->indexCount, GL_UNSIGNED_INT, 0);
+            }
+        }
 
         updateViewport(globalWindow.width, globalWindow.height);
         glCullFace(GL_BACK);
@@ -237,9 +246,15 @@ int main() {
         setUniformMat4(objectShader.uniformView, &viewMatrix);
         setUniformMat4(objectShader.uniformProjection, &projectionMatrix);
 
-        setUniformMat4(objectShader.uniformModel, &modelMatrix);
-        glBindVertexArray(chunkMesh.vao);
-        glDrawElements(GL_TRIANGLES, chunkMesh.indexCount, GL_UNSIGNED_INT, 0);
+        {
+            auto models = world.meshes.list();
+            while (models.next()) {
+                Transform* transform = world.transforms.get(models.entity);
+                setUniformMat4(objectShader.uniformModel, &transform->mat);
+                glBindVertexArray(models.current->vao);
+                glDrawElements(GL_TRIANGLES, models.current->indexCount, GL_UNSIGNED_INT, 0);
+            }
+        }
 
         // Setup default framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
