@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <string.h>
 #include <chunk.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 

@@ -1,8 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <mesh_gen.hpp>
 #include <vector>
+#include <mesh_gen.hpp>
 
 #define internal static
 

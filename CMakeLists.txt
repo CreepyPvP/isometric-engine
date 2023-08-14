@@ -27,14 +27,14 @@ add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
 
 # Find the Required Packages (if Any -> OpenGL/Vulkan or Any)
-find_package(OpenGL REQUIRED)
+# find_package(OpenGL REQUIRED)
 
 
 # Variable for the Libs to add to the Linkers
 # Window libraries:
-set(LIBS glfw opengl32 glad assimp glm)
+# set(LIBS glfw opengl32 glad assimp glm)
 # Linux libraries:
-# set(LIBS glfw X11 glad assimp glm)
+set(LIBS glfw X11 glad assimp glm)
 
 # Variables for Paths of External Libraries
 set(GLFW_ROOT_DIR external/glfw)
