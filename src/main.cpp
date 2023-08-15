@@ -1,3 +1,4 @@
+#include "glm/ext/matrix_transform.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -145,9 +146,30 @@ internal void setupWorld() {
         }
     }
     Mesh chunkMesh = generateVoxelMesh(8, 3, 8, data, 10, 5);
-    Entity entity = world.spawn();
-    world.meshes.insert(entity, chunkMesh);
-    world.transforms.insert(entity, Transform { glm::mat4(1) });
+
+    glm::mat4 transform1 = glm::mat4(1);
+    Entity chunk1 = world.spawn();
+    world.meshes.insert(chunk1, chunkMesh);
+    world.transforms.insert(chunk1, Transform { transform1 });
+
+    glm::mat4 transform2 = glm::mat4(1);
+    transform2 = glm::translate(transform2, glm::vec3(0, 0, -8));
+    Entity chunk2 = world.spawn();
+    world.meshes.insert(chunk2, chunkMesh);
+    world.transforms.insert(chunk2, Transform { transform2 });
+
+    glm::mat4 transform3 = glm::mat4(1);
+    transform3 = glm::translate(transform3, glm::vec3(-8, 0, 0));
+    Entity chunk3 = world.spawn();
+    world.meshes.insert(chunk3, chunkMesh);
+    world.transforms.insert(chunk3, Transform { transform3 });
+
+    glm::mat4 transform4 = glm::mat4(1);
+    transform4 = glm::translate(transform4, glm::vec3(-8, 0, -8));
+    Entity chunk4 = world.spawn();
+    world.meshes.insert(chunk4, chunkMesh);
+    world.transforms.insert(chunk4, Transform { transform4 });
+
     free(data);
 }
 
