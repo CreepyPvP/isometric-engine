@@ -13,6 +13,8 @@ Camera createCamera(float screenX, float screenY) {
     camera.speed = 2.7;
     camera.front = glm::vec3(0, 0, -1);
     camera.up = glm::vec3(0, 1, 0);
+    camera.yaw = 0;
+    camera.pitch = 0;
     camera.setScreenSize(screenX, screenY);
 
     updateView(&camera);
@@ -21,14 +23,14 @@ Camera createCamera(float screenX, float screenY) {
 };
 
 
-void Camera::processPlayerInput(GLFWwindow* window, float delta) {
+void Camera::processKeyInput(GLFWwindow* window, float delta) {
     glm::vec3 movement = glm::vec3(0.0f);
     bool moved = false;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         movement.x += 1;
         moved = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         movement.x -= 1;
         moved = true;
     }
@@ -36,7 +38,7 @@ void Camera::processPlayerInput(GLFWwindow* window, float delta) {
         movement.z -= 1;
         moved = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         movement.z += 1;
         moved = true;
     }
@@ -47,6 +49,25 @@ void Camera::processPlayerInput(GLFWwindow* window, float delta) {
         pos += movement.z * glm::normalize(glm::cross(front, up));
         updateView(this);
     }
+}
+
+void Camera::processMouseInput(float x, float y) {
+    yaw += x;
+    pitch -= y;
+
+    if (pitch > 89.0) {
+        pitch = 89.0;
+    } else if (pitch < -89.0) {
+        pitch = -89.0;
+    }
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front = glm::normalize(direction);
+
+    updateView(this);
 }
 
 inline void Camera::setScreenSize(float screenX, float screenY) {

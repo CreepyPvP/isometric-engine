@@ -29,6 +29,9 @@ global_variable unsigned int gNormal;
 global_variable unsigned int gAlbedo;
 global_variable unsigned int gDepth;
 
+// input
+float lastMousePosX, lastMousePosY;
+
 // fbo
 global_variable unsigned int shadowBuffer;
 // depth buffer
@@ -55,6 +58,17 @@ internal void frameBufferResizeCallback(GLFWwindow *window, int width, int heigh
     camera.setScreenSize((float) width, (float) height);
 }
 
+internal void mouseCallback(GLFWwindow* window, double posX, double posY) {
+    float xOffset = posX - lastMousePosX;
+    float yOffset = posY - lastMousePosY;
+    lastMousePosX = posX;
+    lastMousePosY = posY;
+    const float sensitivity = 0.1f;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
+    camera.processMouseInput(xOffset, yOffset);
+}
+
 internal void initWindow() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -69,6 +83,11 @@ internal void initWindow() {
     }
     glfwMakeContextCurrent(globalWindow.handle);
     glfwSetFramebufferSizeCallback(globalWindow.handle, frameBufferResizeCallback);
+
+    lastMousePosX = (float) globalWindow.width / 2;
+    lastMousePosY = (float) globalWindow.height / 2;
+    glfwSetInputMode(globalWindow.handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(globalWindow.handle, mouseCallback);
 }
 
 internal void setupSquareVao() {
@@ -255,7 +274,7 @@ int main() {
         delta = currentFrame - lastFrame;
         lastFrame = currentFrame;
         
-        camera.processPlayerInput(globalWindow.handle, delta);
+        camera.processKeyInput(globalWindow.handle, delta);
 
         // Render shadow map
         glCullFace(GL_FRONT);

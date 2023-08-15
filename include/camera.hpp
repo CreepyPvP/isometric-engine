@@ -10,13 +10,17 @@ struct Camera {
     glm::vec3 pos;
     glm::vec3 front;
     glm::vec3 up;
+    float yaw;
+    float pitch;
 
     glm::mat4 projection;
     glm::mat4 view;
 
     float speed;
 
-    void processPlayerInput(GLFWwindow* window, float delta);
+    void processKeyInput(GLFWwindow* window, float delta);
+    void processMouseInput(float x, float y);
+
     void setScreenSize(float screenX, float screenY);
 };
 
