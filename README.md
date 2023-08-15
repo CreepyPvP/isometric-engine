@@ -5,8 +5,7 @@
 - indices                               // done
 - Model loading
 - Sceletal animations
-- ECS
-- Tilemap rendering using instancing
+- ECS                                   // done
 
 ## Setup
 

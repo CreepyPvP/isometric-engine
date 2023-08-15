@@ -120,7 +120,7 @@ Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int texture
                     };
                     indices.insert(indices.end(), index, index + 6);
                 }
-                if (!(y - 1 <= 0) || data[getChunkDataOffset(x, y - 1, z, sizeX, sizeZ)] == 255)
+                if (y - 1 < 0 || data[getChunkDataOffset(x, y - 1, z, sizeX, sizeZ)] == 255)
                 {
                     // bottom side
                     Vertex v1;
@@ -179,7 +179,7 @@ Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int texture
                     };
                     indices.insert(indices.end(), index, index + 6);
                 }
-                if (!(x - 1 <= 0) || data[getChunkDataOffset(x - 1, y, z, sizeX, sizeZ)] == 255)
+                if (x - 1 < 0 || data[getChunkDataOffset(x - 1, y, z, sizeX, sizeZ)] == 255)
                 {
                     // left side
                     Vertex v1;

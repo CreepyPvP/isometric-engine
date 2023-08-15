@@ -6,7 +6,8 @@
 
 #include <opengl.hpp>
 #include <mesh_gen.hpp>
-#include "world.hpp"
+#include <world.hpp>
+#include <camera.hpp>
 
 
 
@@ -20,6 +21,7 @@ struct Window {
 };
 
 global_variable Window globalWindow;
+global_variable Camera camera;
 global_variable unsigned int gBuffer;
 global_variable unsigned int gPosition;
 global_variable unsigned int gNormal;
@@ -149,6 +151,10 @@ internal void setupWorld() {
     free(data);
 }
 
+internal void setupCamera() {
+    camera = createCamera(globalWindow.width, globalWindow.height);
+}
+
 internal void setupShadowMap() {
     glGenFramebuffers(1, &shadowBuffer);
     const unsigned int shadowWidth = 1024, shadowHeight = 1024;
@@ -190,14 +196,8 @@ int main() {
     setupGBuffer();
     setupSquareVao();
     setupWorld();
+    setupCamera();
     setupShadowMap();
-
-    auto viewMatrix = glm::lookAt(
-        glm::vec3(5, 3, 5), 
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
-    auto projectionMatrix = glm::perspective(45.0f, (float) globalWindow.width / (float) globalWindow.height, 1.0f, 150.0f);
 
     ObjectShader objectShader = createObjectShader("../shader/objectVert.glsl", "../shader/objectFrag.glsl");
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
@@ -212,6 +212,8 @@ int main() {
         if (glfwGetKey(globalWindow.handle, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(globalWindow.handle, true);
         }
+        
+        camera.update(glfwGetTime());
 
         // Render shadow map
         glCullFace(GL_FRONT);
@@ -243,8 +245,8 @@ int main() {
         glActiveTexture(GL_TEXTURE0);
         bindTexture(tileset);
         useShader(objectShader.id);
-        setUniformMat4(objectShader.uniformView, &viewMatrix);
-        setUniformMat4(objectShader.uniformProjection, &projectionMatrix);
+        setUniformMat4(objectShader.uniformView, &camera.view);
+        setUniformMat4(objectShader.uniformProjection, &camera.projection);
 
         {
             auto models = world.meshes.list();
