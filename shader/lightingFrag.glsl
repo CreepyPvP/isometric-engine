@@ -1,7 +1,7 @@
 #version 440
 
 #define lightDropoff 100
-#define shadowBias 0.005
+#define shadowBias 0.0007
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;

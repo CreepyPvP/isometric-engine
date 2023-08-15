@@ -248,7 +248,7 @@ int main() {
             glfwSetWindowShouldClose(globalWindow.handle, true);
         }
         
-        camera.update(glfwGetTime());
+        camera.processPlayerInput(globalWindow.handle, glfwGetTime());
 
         // Render shadow map
         glCullFace(GL_FRONT);
