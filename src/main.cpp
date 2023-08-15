@@ -243,12 +243,19 @@ int main() {
     auto lightPos = glm::vec3(5);
     auto lightColor = glm::vec3(1, 1, 1);
 
+    float delta = 0.0f;
+    float lastFrame = 0.0f;
+
     while (!glfwWindowShouldClose(globalWindow.handle)) {
         if (glfwGetKey(globalWindow.handle, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(globalWindow.handle, true);
         }
+
+        float currentFrame = glfwGetTime();
+        delta = currentFrame - lastFrame;
+        lastFrame = currentFrame;
         
-        camera.processPlayerInput(globalWindow.handle, glfwGetTime());
+        camera.processPlayerInput(globalWindow.handle, delta);
 
         // Render shadow map
         glCullFace(GL_FRONT);

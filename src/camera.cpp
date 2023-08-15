@@ -10,7 +10,7 @@ inline void updateView(Camera* camera) {
 Camera createCamera(float screenX, float screenY) {
     Camera camera;
     camera.pos = glm::vec3(0, 2, 0);
-    camera.speed = 0.05;
+    camera.speed = 2.7;
     camera.front = glm::vec3(0, 0, -1);
     camera.up = glm::vec3(0, 1, 0);
     camera.setScreenSize(screenX, screenY);
@@ -21,18 +21,32 @@ Camera createCamera(float screenX, float screenY) {
 };
 
 
-void Camera::processPlayerInput(GLFWwindow* window, float time) {
-    // TODO: use delta time
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        pos += speed * front;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        pos -= speed * front;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        pos -= glm::normalize(glm::cross(front, up)) * speed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        pos += glm::normalize(glm::cross(front, up)) * speed;
+void Camera::processPlayerInput(GLFWwindow* window, float delta) {
+    glm::vec3 movement = glm::vec3(0.0f);
+    bool moved = false;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        movement.x += 1;
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        movement.x -= 1;
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        movement.z -= 1;
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        movement.z += 1;
+        moved = true;
+    }
     
-    updateView(this);
+    if (moved) {
+        movement = glm::normalize(movement) * speed * delta;
+        pos += movement.x * front;
+        pos += movement.z * glm::normalize(glm::cross(front, up));
+        updateView(this);
+    }
 }
 
 inline void Camera::setScreenSize(float screenX, float screenY) {

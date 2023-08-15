@@ -16,7 +16,7 @@ struct Camera {
 
     float speed;
 
-    void processPlayerInput(GLFWwindow* window, float time);
+    void processPlayerInput(GLFWwindow* window, float delta);
     void setScreenSize(float screenX, float screenY);
 };
 
