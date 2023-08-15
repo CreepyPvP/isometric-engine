@@ -27,6 +27,7 @@ global_variable unsigned int gBuffer;
 global_variable unsigned int gPosition;
 global_variable unsigned int gNormal;
 global_variable unsigned int gAlbedo;
+global_variable unsigned int gDepth;
 
 // fbo
 global_variable unsigned int shadowBuffer;
@@ -39,6 +40,8 @@ global_variable unsigned int squareVao;
 global_variable World world;
 
 
+internal void setupGBuffer();
+
 internal void updateViewport(int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -47,6 +50,9 @@ internal void frameBufferResizeCallback(GLFWwindow *window, int width, int heigh
     updateViewport(width, height);
     globalWindow.width = width;
     globalWindow.height = height;
+    
+    setupGBuffer();
+    camera.setScreenSize((float) width, (float) height);
 }
 
 internal void initWindow() {
@@ -88,6 +94,14 @@ internal void setupSquareVao() {
 }
 
 internal void setupGBuffer() {
+    if (gBuffer) {
+        glDeleteFramebuffers(1, &gBuffer);
+        glDeleteTextures(1, &gPosition);
+        glDeleteTextures(1, &gNormal);
+        glDeleteTextures(1, &gAlbedo);
+        glDeleteRenderbuffers(1, &gDepth);
+    }
+
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
@@ -118,11 +132,10 @@ internal void setupGBuffer() {
     unsigned int buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
     glDrawBuffers(3, buffers);
 
-    unsigned int depth;
-    glGenRenderbuffers(1, &depth);
-    glBindRenderbuffer(GL_RENDERBUFFER, depth);
+    glGenRenderbuffers(1, &gDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, gDepth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, globalWindow.width, globalWindow.height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gDepth);
 }
 
 internal void setupWorld() {

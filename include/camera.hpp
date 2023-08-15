@@ -10,6 +10,7 @@ struct Camera {
     glm::mat4 view;
 
     void update(float time);
+    void setScreenSize(float screenX, float screenY);
 };
 
 Camera createCamera(float screenX, float screenY);
