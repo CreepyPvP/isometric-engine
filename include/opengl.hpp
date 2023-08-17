@@ -5,12 +5,12 @@
 struct TilemapShader {
     unsigned int id;
 
-    unsigned int uniformModel;
-    unsigned int uniformView;
-    unsigned int uniformProjection;
-    unsigned int uniformWidth;
-    unsigned int uniformHeight;
-    unsigned int uniformTileDataOffset;
+    unsigned int uModel;
+    unsigned int uView;
+    unsigned int uProjection;
+    unsigned int uWidth;
+    unsigned int uHeight;
+    unsigned int uTileDataOffset;
 };
 
 struct LightingShader {
@@ -19,23 +19,25 @@ struct LightingShader {
     unsigned int gNormal;
     unsigned int gAlbedo;
     unsigned int shadowMap;
-    unsigned int uniformLightSpace;
+    unsigned int uLightSpace;
 
-    unsigned int uniformLightPos;
-    unsigned int uniformLightColor;
+    unsigned int uCameraPos;
+
+    unsigned int uLightPos;
+    unsigned int uLightColor;
 };
 
 struct ShadowShader {
     unsigned int id;
-    unsigned int uniformLightSpace;
-    unsigned int uniformModel;
+    unsigned int uLightSpace;
+    unsigned int uModel;
 };
 
 struct ObjectShader {
     unsigned int id;
-    unsigned int uniformModel;
-    unsigned int uniformView;
-    unsigned int uniformProjection;
+    unsigned int uModel;
+    unsigned int uView;
+    unsigned int uProjection;
     unsigned int texture;
 };
 
@@ -54,6 +56,8 @@ void setUniformMat4(unsigned int uniformId, glm::mat4* matrix);
 void setUniform1i(unsigned int uniformId, unsigned int value);
 
 void setUniformVec3(unsigned int uniformId, glm::vec3* vec);
+
+void setUniformVec4(unsigned int uniformId, glm::vec4* vec);
 
 typedef unsigned int Texture;
 

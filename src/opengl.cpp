@@ -74,12 +74,12 @@ TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
 
     shader.id = createShader(vFile, fFile);
 
-    shader.uniformModel = glGetUniformLocation(shader.id, "model");
-    shader.uniformView = glGetUniformLocation(shader.id, "view");
-    shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
-    shader.uniformWidth = glGetUniformLocation(shader.id, "width");
-    shader.uniformHeight = glGetUniformLocation(shader.id, "height");
-    shader.uniformTileDataOffset = glGetUniformLocation(shader.id, "tileDataOffset");
+    shader.uModel = glGetUniformLocation(shader.id, "model");
+    shader.uView = glGetUniformLocation(shader.id, "view");
+    shader.uProjection = glGetUniformLocation(shader.id, "projection");
+    shader.uWidth = glGetUniformLocation(shader.id, "width");
+    shader.uHeight = glGetUniformLocation(shader.id, "height");
+    shader.uTileDataOffset = glGetUniformLocation(shader.id, "tileDataOffset");
 
     return shader;
 }
@@ -93,9 +93,10 @@ LightingShader createLightingShader(std::string vFile, std::string fFile) {
     shader.gNormal = glGetUniformLocation(shader.id, "gNormal");
     shader.gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
     shader.shadowMap = glGetUniformLocation(shader.id, "shadowMap");
-    shader.uniformLightPos = glGetUniformLocation(shader.id, "lightPositions");
-    shader.uniformLightColor = glGetUniformLocation(shader.id, "lightColors");
-    shader.uniformLightSpace = glGetUniformLocation(shader.id, "lightSpace");
+    shader.uLightPos = glGetUniformLocation(shader.id, "lightPositions");
+    shader.uLightColor = glGetUniformLocation(shader.id, "lightColors");
+    shader.uLightSpace = glGetUniformLocation(shader.id, "lightSpace");
+    shader.uCameraPos = glGetUniformLocation(shader.id, "cameraPos");
 
     useShader(shader.id);
     glUniform1i(shader.gPosition, 0);
@@ -111,9 +112,9 @@ ObjectShader createObjectShader(std::string vFile, std::string fFile) {
 
     shader.id = createShader(vFile, fFile);
 
-    shader.uniformModel = glGetUniformLocation(shader.id, "model");
-    shader.uniformView = glGetUniformLocation(shader.id, "view");
-    shader.uniformProjection = glGetUniformLocation(shader.id, "projection");
+    shader.uModel = glGetUniformLocation(shader.id, "model");
+    shader.uView = glGetUniformLocation(shader.id, "view");
+    shader.uProjection = glGetUniformLocation(shader.id, "projection");
 
     return shader;
 }
@@ -123,8 +124,8 @@ ShadowShader createShadowShader(std::string vFile, std::string fFile) {
 
     shader.id = createShader(vFile, fFile);
 
-    shader.uniformModel = glGetUniformLocation(shader.id, "model");
-    shader.uniformLightSpace = glGetUniformLocation(shader.id, "lightSpace");
+    shader.uModel = glGetUniformLocation(shader.id, "model");
+    shader.uLightSpace = glGetUniformLocation(shader.id, "lightSpace");
 
     return shader;
 }
@@ -143,6 +144,10 @@ void setUniform1i(unsigned int uniformId, unsigned int value) {
 
 void setUniformVec3(unsigned int uniformId, glm::vec3* vec) {
     glUniform3fv(uniformId, 1, &(vec->x));
+}
+
+void setUniformVec4(unsigned int uniformId, glm::vec4* vec) {
+    glUniform4fv(uniformId, 1, &(vec->x));
 }
 
 Texture loadTexture(std::string file) {

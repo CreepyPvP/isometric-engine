@@ -1,3 +1,4 @@
+#include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -148,7 +149,7 @@ internal void setupGBuffer() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedo, 0);
 
-    unsigned int buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    unsigned int buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     glDrawBuffers(3, buffers);
 
     glGenRenderbuffers(1, &gDepth);
@@ -230,9 +231,10 @@ internal void setupShadowMap() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     float nearPlane = 0.1f;
-    float farPlane = 17;
+    float farPlane = 200;
     auto lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-    auto lightView = glm::lookAt(glm::vec3(5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    // auto lightProjection = glm::perspective(360.0f, 1.0f, 1.0f, 10.0f);
+    auto lightView = glm::lookAt(glm::vec3(100), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     lightSpace = lightProjection * lightView;
 }
 
@@ -259,7 +261,7 @@ int main() {
 
     Texture tileset = loadTexture("../assets/tileset.png");
 
-    auto lightPos = glm::vec3(5);
+    auto lightPos = glm::vec4(100, 100, 100, 1);
     auto lightColor = glm::vec3(1, 1, 1);
 
     float delta = 0.0f;
@@ -277,24 +279,22 @@ int main() {
         camera.processKeyInput(globalWindow.handle, delta);
 
         // Render shadow map
-        glCullFace(GL_FRONT);
         updateViewport(1024, 1024);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
         glClear(GL_DEPTH_BUFFER_BIT);
         useShader(shadowShader.id);
-        setUniformMat4(shadowShader.uniformLightSpace, &lightSpace);
+        setUniformMat4(shadowShader.uLightSpace, &lightSpace);
         {
             auto shadowCasters = world.meshes.list();
             while (shadowCasters.next()) {
                 Transform* transform = world.transforms.get(shadowCasters.entity);
-                setUniformMat4(shadowShader.uniformModel, &transform->mat);
+                setUniformMat4(shadowShader.uModel, &transform->mat);
                 glBindVertexArray(shadowCasters.current->vao);
                 glDrawElements(GL_TRIANGLES, shadowCasters.current->indexCount, GL_UNSIGNED_INT, 0);
             }
         }
 
         updateViewport(globalWindow.width, globalWindow.height);
-        glCullFace(GL_BACK);
 
         // Setup geometry buffer
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -306,14 +306,14 @@ int main() {
         glActiveTexture(GL_TEXTURE0);
         bindTexture(tileset);
         useShader(objectShader.id);
-        setUniformMat4(objectShader.uniformView, &camera.view);
-        setUniformMat4(objectShader.uniformProjection, &camera.projection);
+        setUniformMat4(objectShader.uView, &camera.view);
+        setUniformMat4(objectShader.uProjection, &camera.projection);
 
         {
             auto models = world.meshes.list();
             while (models.next()) {
                 Transform* transform = world.transforms.get(models.entity);
-                setUniformMat4(objectShader.uniformModel, &transform->mat);
+                setUniformMat4(objectShader.uModel, &transform->mat);
                 glBindVertexArray(models.current->vao);
                 glDrawElements(GL_TRIANGLES, models.current->indexCount, GL_UNSIGNED_INT, 0);
             }
@@ -335,9 +335,10 @@ int main() {
 
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         useShader(lightingShader.id);
-        setUniformVec3(lightingShader.uniformLightPos, &lightPos);
-        setUniformVec3(lightingShader.uniformLightColor, &lightColor);
-        setUniformMat4(lightingShader.uniformLightSpace, &lightSpace);
+        setUniformVec4(lightingShader.uLightPos, &lightPos);
+        setUniformVec3(lightingShader.uLightColor, &lightColor);
+        setUniformMat4(lightingShader.uLightSpace, &lightSpace);
+        setUniformVec3(lightingShader.uCameraPos, &camera.pos);
         glBindVertexArray(squareVao);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
