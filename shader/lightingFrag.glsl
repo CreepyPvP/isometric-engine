@@ -37,7 +37,7 @@ void main() {
     // vec3 worldPos3 = worldPos.xyz;
     vec3 normal = texture(gNormal, uv).xyz;
 
-    vec3 lightInfluence = vec3(0, 0, 0);
+    vec3 lightInfluence = vec3(0.2, 0.2, 0.2);
     for (int i = 0; i < 1; ++i) {
         vec3 lightDirection = lightPositions[i].xyz - worldPos.xyz * lightPositions[i].w;
         vec3 unitLightDirection = normalize(lightDirection);
@@ -51,6 +51,7 @@ void main() {
 
         lightInfluence += min(specularIntensity + diffuseIntensity, 1) * shadowMod * lightColors[i];
     }
+    lightInfluence = clamp(lightInfluence, 0, 1);
 
     // vec3 lightInfluence = vec3(0.1, 0.1, 0.1);
     // float shadowMod = 1 - shadowCalculation(lightSpace * worldPos);
