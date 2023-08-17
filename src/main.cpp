@@ -1,5 +1,6 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include <float.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -35,9 +36,30 @@ float lastMousePosX, lastMousePosY;
 
 // fbo
 global_variable unsigned int shadowBuffer;
+
+// TODO: clean the lighting shit up
 // depth buffer
 global_variable unsigned int shadowMap;
+global_variable unsigned int shadowCubeDepth;
 global_variable glm::mat4 lightSpace;
+global_variable glm::vec4 lightPos;
+global_variable glm::mat4 cubemapLightSpace[6];
+
+struct CubemapDirection {
+    GLenum cubemapFace;
+    glm::vec3 target;
+    glm::vec3 up;
+};
+
+CubemapDirection cubemapDirections[6] = {
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_X, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0) },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_X, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0) },
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_Y, glm::vec3(0, 1, 0), glm::vec3(0, 0, -1) },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, glm::vec3(0, -1, 0), glm::vec3(0, 0, 1) },
+    // Maybe z axis target needs to be flipped
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_Z, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0) },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0) },
+};
 
 global_variable unsigned int squareVao;
 
@@ -210,7 +232,9 @@ internal void setupCamera() {
     camera = createCamera(globalWindow.width, globalWindow.height);
 }
 
-internal void setupShadowMap() {
+internal void setupDirectionalShadowMap() {
+    lightPos = glm::vec4(100, 100, 100, 0);
+
     glGenFramebuffers(1, &shadowBuffer);
     const unsigned int shadowWidth = 1024, shadowHeight = 1024;
     glGenTextures(1, &shadowMap);
@@ -234,8 +258,51 @@ internal void setupShadowMap() {
     float farPlane = 200;
     auto lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
     // auto lightProjection = glm::perspective(360.0f, 1.0f, 1.0f, 10.0f);
-    auto lightView = glm::lookAt(glm::vec3(100), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    auto lightView = glm::lookAt(glm::vec3(lightPos), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     lightSpace = lightProjection * lightView;
+}
+
+internal void setupPointShadowMap() {
+    lightPos = glm::vec4(0, 1, 0, 1);
+
+    const unsigned int size = 1024;
+    glGenTextures(1, &shadowCubeDepth);
+    glBindTexture(GL_TEXTURE_2D, shadowCubeDepth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenTextures(1, &shadowMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    auto projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 20.0f);
+    for (uint32 i = 0; i < 6; ++i) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, NULL);
+
+        auto view = glm::lookAt(glm::vec3(lightPos), glm::vec3(lightPos) + cubemapDirections[i].target, cubemapDirections[i].up);
+        cubemapLightSpace[i] = projection * view;
+    }
+
+    glGenFramebuffers(1, &shadowBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowCubeDepth, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+}
+
+internal void bindCubemapFace(GLenum face) {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, shadowBuffer);
+    updateViewport(1024, 1024);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, face, shadowMap, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
 int main() {
@@ -253,7 +320,7 @@ int main() {
     setupSquareVao();
     setupWorld();
     setupCamera();
-    setupShadowMap();
+    setupPointShadowMap();
 
     ObjectShader objectShader = createObjectShader("../shader/objectVert.glsl", "../shader/objectFrag.glsl");
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
@@ -261,7 +328,6 @@ int main() {
 
     Texture tileset = loadTexture("../assets/tileset.png");
 
-    auto lightPos = glm::vec4(100, 100, 100, 1);
     auto lightColor = glm::vec3(1, 1, 1);
 
     float delta = 0.0f;
@@ -279,21 +345,28 @@ int main() {
         camera.processKeyInput(globalWindow.handle, delta);
 
         // Render shadow map
-        updateViewport(1024, 1024);
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        // glClear(GL_DEPTH_BUFFER_BIT);
         useShader(shadowShader.id);
-        setUniformMat4(shadowShader.uLightSpace, &lightSpace);
-        {
-            auto shadowCasters = world.meshes.list();
-            while (shadowCasters.next()) {
-                Transform* transform = world.transforms.get(shadowCasters.entity);
-                setUniformMat4(shadowShader.uModel, &transform->mat);
-                glBindVertexArray(shadowCasters.current->vao);
-                glDrawElements(GL_TRIANGLES, shadowCasters.current->indexCount, GL_UNSIGNED_INT, 0);
-            }
-        }
+        // ignore this
+        // setUniformMat4(shadowShader.uLightSpace, &lightSpace);
 
+        glClearColor(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
+        setUniformVec4(shadowShader.uLightPos, &lightPos);
+        for (uint16 i = 0; i < 6; ++i) {
+            bindCubemapFace(cubemapDirections[i].cubemapFace);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            setUniformMat4(shadowShader.uLightSpace, cubemapLightSpace + i);
+            {
+                auto shadowCasters = world.meshes.list();
+                while (shadowCasters.next()) {
+                    Transform* transform = world.transforms.get(shadowCasters.entity);
+                    setUniformMat4(shadowShader.uModel, &transform->mat);
+                    glBindVertexArray(shadowCasters.current->vao);
+                    glDrawElements(GL_TRIANGLES, shadowCasters.current->indexCount, GL_UNSIGNED_INT, 0);
+                }
+            }
+
+        }
         updateViewport(globalWindow.width, globalWindow.height);
 
         // Setup geometry buffer
@@ -330,8 +403,10 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, gNormal);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedo);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, shadowMap);
+        // glActiveTexture(GL_TEXTURE3);
+        // glBindTexture(GL_TEXTURE_2D, shadowMap);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
 
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         useShader(lightingShader.id);

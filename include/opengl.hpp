@@ -19,6 +19,7 @@ struct LightingShader {
     unsigned int gNormal;
     unsigned int gAlbedo;
     unsigned int shadowMap;
+    unsigned int cubemapShadow;
     unsigned int uLightSpace;
 
     unsigned int uCameraPos;
@@ -31,6 +32,7 @@ struct ShadowShader {
     unsigned int id;
     unsigned int uLightSpace;
     unsigned int uModel;
+    unsigned int uLightPos;
 };
 
 struct ObjectShader {

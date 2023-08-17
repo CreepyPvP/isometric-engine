@@ -71,5 +71,5 @@ void Camera::processMouseInput(float x, float y) {
 }
 
 inline void Camera::setScreenSize(float screenX, float screenY) {
-    projection = glm::perspective(45.0f, screenX / screenY, 1.0f, 150.0f);
+    projection = glm::perspective(glm::radians(55.0f), screenX / screenY, 1.0f, 150.0f);
 }

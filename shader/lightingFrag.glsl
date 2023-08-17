@@ -1,12 +1,26 @@
 #version 440
 
 #define lightDropoff 100
-#define shadowBias 0.005
+#define shadowBias 0.015
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform sampler2D shadowMap;
+uniform samplerCube cubemapShadow;
+
+// struct Light {
+//     vec3 color;
+//     vec4 position;
+//
+//     mat4 transform;
+//     sampler2D shadowMap;
+//
+//     // attenuation
+//     float constant;
+//     float linear;
+//     float quadratic;
+// };
 
 uniform vec4 lightPositions[1];
 uniform vec3 lightColors[1];
@@ -15,16 +29,24 @@ uniform mat4 lightSpace;
 uniform vec3 cameraPos;
 
 in vec2 screenPos;
-
 out vec4 out_Color;
 
-float shadowCalculation(vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
-    float currentDepth = projCoords.z;
-    float shadow = currentDepth - shadowBias > closestDepth ? 1.0 : 0.0;
+// Directional lighting
+// float shadowCalculation(vec4 fragPosLightSpace) {
+//     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+//     projCoords = projCoords * 0.5 + 0.5;
+//     float closestDepth = texture(shadowMap, projCoords.xy).r;
+//     float currentDepth = projCoords.z;
+//     float shadow = currentDepth - shadowBias > closestDepth ? 1.0 : 0.0;
+//
+//     return shadow;
+// }
 
+float calcShadowPointLight(vec3 lightToPixel) {
+    float distance = length(lightToPixel);
+    lightToPixel.y = -lightToPixel.y;
+    float sampledDistance = texture(cubemapShadow, lightToPixel).r;
+    float shadow = distance - shadowBias > sampledDistance ? 1.0 : 0.0;
     return shadow;
 }
 
@@ -47,9 +69,11 @@ void main() {
         float diffuseIntensity = max(dot(normal, unitLightDirection), 0);
         float specularIntensity = max(dot(reflectedDirection, eyeDirection), 0);
 
-        float shadowMod = 1 - shadowCalculation(lightSpace * worldPos);
+        // float shadowMod = 1 - shadowCalculation(lightSpace * worldPos);
+        float shadowMod = 1 - calcShadowPointLight(-lightDirection);
 
-        lightInfluence += min(specularIntensity + diffuseIntensity, 1) * shadowMod * lightColors[i];
+        // lightInfluence += min(specularIntensity + diffuseIntensity, 1) * shadowMod * lightColors[i];
+        lightInfluence += shadowMod * lightColors[i];
     }
     lightInfluence = clamp(lightInfluence, 0, 1);
 
