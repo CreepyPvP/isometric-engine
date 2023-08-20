@@ -59,7 +59,7 @@ void main() {
     // vec3 worldPos3 = worldPos.xyz;
     vec3 normal = texture(gNormal, uv).xyz;
 
-    vec3 lightInfluence = vec3(0.2, 0.2, 0.2);
+    vec3 lightInfluence = vec3(0.1, 0.1, 0.1);
     for (int i = 0; i < 1; ++i) {
         vec3 lightDirection = lightPositions[i].xyz - worldPos.xyz * lightPositions[i].w;
         vec3 unitLightDirection = normalize(lightDirection);
@@ -72,8 +72,15 @@ void main() {
         // float shadowMod = 1 - shadowCalculation(lightSpace * worldPos);
         float shadowMod = 1 - calcShadowPointLight(-lightDirection);
 
-        // lightInfluence += min(specularIntensity + diffuseIntensity, 1) * shadowMod * lightColors[i];
-        lightInfluence += shadowMod * lightColors[i];
+        float distance = length(lightDirection);
+        const float constant = 2;
+        const float linear = 0.2;
+        const float quadratic = 0.05;
+        float attenuation = constant + distance * linear + distance * distance * quadratic;
+
+        lightInfluence += min((diffuseIntensity + specularIntensity) / attenuation, 1) * shadowMod * lightColors[i];
+
+        // lightInfluence += shadowMod * lightColors[i];
     }
     lightInfluence = clamp(lightInfluence, 0, 1);
 

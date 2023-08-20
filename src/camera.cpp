@@ -9,7 +9,7 @@ inline void updateView(Camera* camera) {
 
 Camera createCamera(float screenX, float screenY) {
     Camera camera;
-    camera.pos = glm::vec3(0, 2, 0);
+    camera.pos = glm::vec3(5, 2, 0);
     camera.speed = 2.7;
     camera.front = glm::vec3(0, 0, -1);
     camera.up = glm::vec3(0, 1, 0);

@@ -263,7 +263,7 @@ internal void setupDirectionalShadowMap() {
 }
 
 internal void setupPointShadowMap() {
-    lightPos = glm::vec4(0, 1, 0, 1);
+    lightPos = glm::vec4(5, 2, 0, 1);
 
     const unsigned int size = 1024;
     glGenTextures(1, &shadowCubeDepth);
@@ -381,7 +381,6 @@ int main() {
         useShader(objectShader.id);
         setUniformMat4(objectShader.uView, &camera.view);
         setUniformMat4(objectShader.uProjection, &camera.projection);
-
         {
             auto models = world.meshes.list();
             while (models.next()) {
