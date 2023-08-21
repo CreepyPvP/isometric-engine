@@ -37,13 +37,9 @@ float lastMousePosX, lastMousePosY;
 // fbo
 global_variable unsigned int shadowBuffer;
 
-// TODO: clean the lighting shit up
-// depth buffer
 global_variable unsigned int shadowMap;
-global_variable unsigned int shadowCubeDepth;
 global_variable glm::mat4 lightSpace;
 global_variable glm::vec4 lightPos;
-global_variable glm::mat4 cubemapLightSpace[6];
 
 struct CubemapDirection {
     GLenum cubemapFace;
@@ -67,6 +63,7 @@ global_variable World world;
 
 
 internal void setupGBuffer();
+internal void setupPointLight(PointLight* pointLight, Transform* transform);
 
 internal void updateViewport(int width, int height) {
     glViewport(0, 0, width, height);
@@ -205,27 +202,49 @@ internal void setupWorld() {
     glm::mat4 transform1 = glm::mat4(1);
     Entity chunk1 = world.spawn();
     world.meshes.insert(chunk1, chunkMesh);
-    world.transforms.insert(chunk1, Transform { transform1 });
+    world.transforms.insert(chunk1, Transform { transform1, glm::vec3(0) });
 
     glm::mat4 transform2 = glm::mat4(1);
-    transform2 = glm::translate(transform2, glm::vec3(0, 0, -8));
+    glm::vec3 pos2 = glm::vec3(0, 0, -8);
+    transform2 = glm::translate(transform2, pos2);
     Entity chunk2 = world.spawn();
     world.meshes.insert(chunk2, chunkMesh);
-    world.transforms.insert(chunk2, Transform { transform2 });
+    world.transforms.insert(chunk2, Transform { transform2, pos2 });
 
     glm::mat4 transform3 = glm::mat4(1);
-    transform3 = glm::translate(transform3, glm::vec3(-8, 0, 0));
+    glm::vec3 pos3 = glm::vec3(-8, 0, 0);
+    transform3 = glm::translate(transform3, pos3);
     Entity chunk3 = world.spawn();
     world.meshes.insert(chunk3, chunkMesh);
     world.transforms.insert(chunk3, Transform { transform3 });
 
     glm::mat4 transform4 = glm::mat4(1);
-    transform4 = glm::translate(transform4, glm::vec3(-8, 0, -8));
+    glm::vec3 pos4 = glm::vec3(-8, 0, -8);
+    transform4 = glm::translate(transform4, pos4);
     Entity chunk4 = world.spawn();
     world.meshes.insert(chunk4, chunkMesh);
     world.transforms.insert(chunk4, Transform { transform4 });
 
     free(data);
+
+    Entity pointLight1 = world.spawn();
+    PointLight light1;
+    light1.shadowMapSize = 1024;
+    light1.color = glm::vec3(1, 0.5, 0.5);
+    Transform pointLight1Transform = Transform { glm::mat4(1), glm::vec3(0, 1, 0) };
+    setupPointLight(&light1, &pointLight1Transform);
+    world.pointLights.insert(pointLight1, light1);
+    world.transforms.insert(pointLight1, pointLight1Transform);
+
+    Entity pointLight2 = world.spawn();
+    Transform pointLight2Transform = Transform { glm::mat4(1), glm::vec3(5, 1, 5) };
+    PointLight light2;
+    light2.shadowMapSize = 1024;
+    light2.color = glm::vec3(0.5, 1, 0.5);
+    setupPointLight(&light2, &pointLight2Transform);
+    world.pointLights.insert(pointLight2, light2);
+    world.transforms.insert(pointLight2, pointLight2Transform);
+
 }
 
 internal void setupCamera() {
@@ -262,21 +281,18 @@ internal void setupDirectionalShadowMap() {
     lightSpace = lightProjection * lightView;
 }
 
-internal void setupPointShadowMap() {
-    lightPos = glm::vec4(5, 2, 0, 1);
-
-    const unsigned int size = 1024;
-    glGenTextures(1, &shadowCubeDepth);
-    glBindTexture(GL_TEXTURE_2D, shadowCubeDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+internal void setupPointLight(PointLight* pointLight, Transform* transform) {
+    glGenTextures(1, &pointLight->shadowMapDepthBuffer);
+    glBindTexture(GL_TEXTURE_2D, pointLight->shadowMapDepthBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, pointLight->shadowMapSize, pointLight->shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenTextures(1, &shadowMap);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
+    glGenTextures(1, &pointLight->shadowMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, pointLight->shadowMap);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -285,23 +301,23 @@ internal void setupPointShadowMap() {
 
     auto projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 20.0f);
     for (uint32 i = 0; i < 6; ++i) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_R32F, size, size, 0, GL_RED, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_R32F, pointLight->shadowMapSize, pointLight->shadowMapSize, 0, GL_RED, GL_FLOAT, NULL);
 
-        auto view = glm::lookAt(glm::vec3(lightPos), glm::vec3(lightPos) + cubemapDirections[i].target, cubemapDirections[i].up);
-        cubemapLightSpace[i] = projection * view;
+        glm::mat4 view = glm::lookAt(glm::vec3(transform->pos), transform->pos + cubemapDirections[i].target, cubemapDirections[i].up);
+        pointLight->viewProjectionMat[i] = projection * view;
     }
 
-    glGenFramebuffers(1, &shadowBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowCubeDepth, 0);
+    glGenFramebuffers(1, &pointLight->framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, pointLight->framebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pointLight->shadowMapDepthBuffer, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 }
 
-internal void bindCubemapFace(GLenum face) {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, shadowBuffer);
-    updateViewport(1024, 1024);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, face, shadowMap, 0);
+internal void bindCubemapFace(PointLight* pointLight, GLenum face) {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pointLight->framebuffer);
+    updateViewport(pointLight->shadowMapSize, pointLight->shadowMapSize);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, face, pointLight->shadowMap, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
@@ -320,7 +336,6 @@ int main() {
     setupSquareVao();
     setupWorld();
     setupCamera();
-    setupPointShadowMap();
 
     ObjectShader objectShader = createObjectShader("../shader/objectVert.glsl", "../shader/objectFrag.glsl");
     LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
@@ -350,13 +365,15 @@ int main() {
         // ignore this
         // setUniformMat4(shadowShader.uLightSpace, &lightSpace);
 
-        glClearColor(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
-        setUniformVec4(shadowShader.uLightPos, &lightPos);
-        for (uint16 i = 0; i < 6; ++i) {
-            bindCubemapFace(cubemapDirections[i].cubemapFace);
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-            setUniformMat4(shadowShader.uLightSpace, cubemapLightSpace + i);
-            {
+        auto pointLights = world.pointLights.list();
+        while (pointLights.next()) {
+            Transform* transform = world.transforms.get(pointLights.entity);
+            glClearColor(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
+            setUniformVec3(shadowShader.uLightPos, &transform->pos);
+            for (uint16 i = 0; i < 6; ++i) {
+                bindCubemapFace(pointLights.current, cubemapDirections[i].cubemapFace);
+                glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+                setUniformMat4(shadowShader.uLightSpace, pointLights.current->viewProjectionMat + i);
                 auto shadowCasters = world.meshes.list();
                 while (shadowCasters.next()) {
                     Transform* transform = world.transforms.get(shadowCasters.entity);
@@ -365,7 +382,6 @@ int main() {
                     glDrawElements(GL_TRIANGLES, shadowCasters.current->indexCount, GL_UNSIGNED_INT, 0);
                 }
             }
-
         }
         updateViewport(globalWindow.width, globalWindow.height);
 
@@ -405,13 +421,18 @@ int main() {
         // glActiveTexture(GL_TEXTURE3);
         // glBindTexture(GL_TEXTURE_2D, shadowMap);
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
 
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         useShader(lightingShader.id);
-        setUniformVec4(lightingShader.uLightPos, &lightPos);
-        setUniformVec3(lightingShader.uLightColor, &lightColor);
-        setUniformMat4(lightingShader.uLightSpace, &lightSpace);
+        pointLights = world.pointLights.list();
+        while (pointLights.next()) {
+            Transform* transform = world.transforms.get(pointLights.entity);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, pointLights.current->shadowMap);
+            setUniformVec3(lightingShader.uLightPos, &transform->pos);
+            setUniformVec3(lightingShader.uLightColor, &pointLights.current->color);
+            // TODO: set attenuation here
+            // setUniformMat4(lightingShader.uLightSpace, &lightSpace);
+        }
         setUniformVec3(lightingShader.uCameraPos, &camera.pos);
         glBindVertexArray(squareVao);
 

@@ -14,6 +14,7 @@ World createWorld(uint16_t capacity) {
 
     world.meshes = createSparseSet<Mesh>(100, capacity);
     world.transforms = createSparseSet<Transform>(100, capacity);
+    world.pointLights = createSparseSet<PointLight>(10, capacity);
 
     return world;
 }
@@ -28,6 +29,7 @@ Entity World::spawn() {
 void World::despawn(Entity entity) {
     meshes.remove(entity);
     transforms.remove(entity);
+    pointLights.remove(entity);
 
     freeEntities.push_back(entity);
 }

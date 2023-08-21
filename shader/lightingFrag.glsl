@@ -22,7 +22,7 @@ uniform samplerCube cubemapShadow;
 //     float quadratic;
 // };
 
-uniform vec4 lightPositions[1];
+uniform vec3 lightPositions[1];
 uniform vec3 lightColors[1];
 uniform mat4 lightSpace;
 
@@ -61,7 +61,7 @@ void main() {
 
     vec3 lightInfluence = vec3(0.1, 0.1, 0.1);
     for (int i = 0; i < 1; ++i) {
-        vec3 lightDirection = lightPositions[i].xyz - worldPos.xyz * lightPositions[i].w;
+        vec3 lightDirection = lightPositions[i].xyz - worldPos.xyz;
         vec3 unitLightDirection = normalize(lightDirection);
         vec3 eyeDirection = normalize(-(worldPos.xyz - cameraPos));
         vec3 reflectedDirection = normalize(-reflect(unitLightDirection, normal));

@@ -1,6 +1,6 @@
 #version 440 core
 
-uniform vec4 lightPos;
+uniform vec3 lightPos;
 
 in vec3 worldPos;
 
