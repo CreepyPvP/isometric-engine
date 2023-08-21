@@ -45,6 +45,7 @@ out vec4 out_Color;
 float calcShadowPointLight(vec3 lightToPixel) {
     float distance = length(lightToPixel);
     lightToPixel.y = -lightToPixel.y;
+    lightToPixel.z = -lightToPixel.z;
     float sampledDistance = texture(cubemapShadow, lightToPixel).r;
     float shadow = distance - shadowBias > sampledDistance ? 1.0 : 0.0;
     return shadow;

@@ -204,12 +204,12 @@ internal void setupWorld() {
     world.meshes.insert(chunk1, chunkMesh);
     world.transforms.insert(chunk1, Transform { transform1, glm::vec3(0) });
 
-    glm::mat4 transform2 = glm::mat4(1);
-    glm::vec3 pos2 = glm::vec3(0, 0, -8);
-    transform2 = glm::translate(transform2, pos2);
-    Entity chunk2 = world.spawn();
-    world.meshes.insert(chunk2, chunkMesh);
-    world.transforms.insert(chunk2, Transform { transform2, pos2 });
+    // glm::mat4 transform2 = glm::mat4(1);
+    // glm::vec3 pos2 = glm::vec3(0, 0, -8);
+    // transform2 = glm::translate(transform2, pos2);
+    // Entity chunk2 = world.spawn();
+    // world.meshes.insert(chunk2, chunkMesh);
+    // world.transforms.insert(chunk2, Transform { transform2, pos2 });
 
     glm::mat4 transform3 = glm::mat4(1);
     glm::vec3 pos3 = glm::vec3(-8, 0, 0);
@@ -218,12 +218,12 @@ internal void setupWorld() {
     world.meshes.insert(chunk3, chunkMesh);
     world.transforms.insert(chunk3, Transform { transform3 });
 
-    glm::mat4 transform4 = glm::mat4(1);
-    glm::vec3 pos4 = glm::vec3(-8, 0, -8);
-    transform4 = glm::translate(transform4, pos4);
-    Entity chunk4 = world.spawn();
-    world.meshes.insert(chunk4, chunkMesh);
-    world.transforms.insert(chunk4, Transform { transform4 });
+    // glm::mat4 transform4 = glm::mat4(1);
+    // glm::vec3 pos4 = glm::vec3(-8, 0, -8);
+    // transform4 = glm::translate(transform4, pos4);
+    // Entity chunk4 = world.spawn();
+    // world.meshes.insert(chunk4, chunkMesh);
+    // world.transforms.insert(chunk4, Transform { transform4 });
 
     free(data);
 
