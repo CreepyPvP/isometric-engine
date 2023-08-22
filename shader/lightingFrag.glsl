@@ -1,32 +1,22 @@
 #version 440
 
-#define lightDropoff 100
 #define shadowBias 0.015
+#define maxPointLightCount 3
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform sampler2D shadowMap;
-uniform samplerCube cubemapShadow;
-
-// struct Light {
-//     vec3 color;
-//     vec4 position;
-//
-//     mat4 transform;
-//     sampler2D shadowMap;
-//
-//     // attenuation
-//     float constant;
-//     float linear;
-//     float quadratic;
-// };
-
-uniform vec3 lightPositions[1];
-uniform vec3 lightColors[1];
-uniform mat4 lightSpace;
 
 uniform vec3 cameraPos;
+
+uniform samplerCube pointLightMaps[maxPointLightCount];
+uniform vec3 lightPositions[maxPointLightCount];
+uniform vec3 lightColors[maxPointLightCount];
+uniform int pointLightCount;
+
+uniform mat4 lightSpace;
+
 
 in vec2 screenPos;
 out vec4 out_Color;
@@ -42,11 +32,11 @@ out vec4 out_Color;
 //     return shadow;
 // }
 
-float calcShadowPointLight(vec3 lightToPixel) {
+float calcShadowPointLight(vec3 lightToPixel, samplerCube map) {
     float distance = length(lightToPixel);
     lightToPixel.y = -lightToPixel.y;
     lightToPixel.z = -lightToPixel.z;
-    float sampledDistance = texture(cubemapShadow, lightToPixel).r;
+    float sampledDistance = texture(map, lightToPixel).r;
     float shadow = distance - shadowBias > sampledDistance ? 1.0 : 0.0;
     return shadow;
 }
@@ -61,7 +51,7 @@ void main() {
     vec3 normal = texture(gNormal, uv).xyz;
 
     vec3 lightInfluence = vec3(0.1, 0.1, 0.1);
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < pointLightCount; ++i) {
         vec3 lightDirection = lightPositions[i].xyz - worldPos.xyz;
         vec3 unitLightDirection = normalize(lightDirection);
         vec3 eyeDirection = normalize(-(worldPos.xyz - cameraPos));
@@ -71,7 +61,7 @@ void main() {
         float specularIntensity = max(dot(reflectedDirection, eyeDirection), 0);
 
         // float shadowMod = 1 - shadowCalculation(lightSpace * worldPos);
-        float shadowMod = 1 - calcShadowPointLight(-lightDirection);
+        float shadowMod = 1 - calcShadowPointLight(-lightDirection, pointLightMaps[i]);
 
         float distance = length(lightDirection);
         const float constant = 2;
@@ -79,9 +69,9 @@ void main() {
         const float quadratic = 0.05;
         float attenuation = constant + distance * linear + distance * distance * quadratic;
 
-        lightInfluence += min((diffuseIntensity + specularIntensity) / attenuation, 1) * shadowMod * lightColors[i];
+        // lightInfluence += min((diffuseIntensity + specularIntensity) / attenuation, 1) * shadowMod * lightColors[i];
 
-        // lightInfluence += shadowMod * lightColors[i];
+        lightInfluence += shadowMod * min((diffuseIntensity + specularIntensity) / attenuation, 1) * lightColors[i];
     }
     lightInfluence = clamp(lightInfluence, 0, 1);
 

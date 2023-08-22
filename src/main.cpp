@@ -41,6 +41,9 @@ global_variable unsigned int shadowMap;
 global_variable glm::mat4 lightSpace;
 global_variable glm::vec4 lightPos;
 
+// lighting
+#define POINT_LIGHT_TEXTURE_SLOT GL_TEXTURE4
+
 struct CubemapDirection {
     GLenum cubemapFace;
     glm::vec3 target;
@@ -420,20 +423,23 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, gAlbedo);
         // glActiveTexture(GL_TEXTURE3);
         // glBindTexture(GL_TEXTURE_2D, shadowMap);
-        glActiveTexture(GL_TEXTURE4);
 
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         useShader(lightingShader.id);
         pointLights = world.pointLights.list();
-        while (pointLights.next()) {
+        int pointLightCount = 0;
+        while (pointLights.next() && pointLights.index < POINT_LIGHTS_MAX) {
             Transform* transform = world.transforms.get(pointLights.entity);
+            glActiveTexture(POINT_LIGHT_TEXTURE_SLOT + pointLights.index);
             glBindTexture(GL_TEXTURE_CUBE_MAP, pointLights.current->shadowMap);
-            setUniformVec3(lightingShader.uLightPos, &transform->pos);
-            setUniformVec3(lightingShader.uLightColor, &pointLights.current->color);
+            setUniformVec3(lightingShader.uPointLights[pointLights.index].pos, &transform->pos);
+            setUniformVec3(lightingShader.uPointLights[pointLights.index].color, &pointLights.current->color);
+            ++pointLightCount;
             // TODO: set attenuation here
             // setUniformMat4(lightingShader.uLightSpace, &lightSpace);
         }
         setUniformVec3(lightingShader.uCameraPos, &camera.pos);
+        setUniform1i(lightingShader.uPointLightCount, pointLightCount);
         glBindVertexArray(squareVao);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);

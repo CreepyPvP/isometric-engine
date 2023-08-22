@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <string>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -92,19 +93,26 @@ LightingShader createLightingShader(std::string vFile, std::string fFile) {
     shader.gPosition = glGetUniformLocation(shader.id, "gPosition");
     shader.gNormal = glGetUniformLocation(shader.id, "gNormal");
     shader.gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
-    shader.shadowMap = glGetUniformLocation(shader.id, "shadowMap");
-    shader.cubemapShadow = glGetUniformLocation(shader.id, "cubemapShadow");
-    shader.uLightPos = glGetUniformLocation(shader.id, "lightPositions");
-    shader.uLightColor = glGetUniformLocation(shader.id, "lightColors");
     shader.uLightSpace = glGetUniformLocation(shader.id, "lightSpace");
     shader.uCameraPos = glGetUniformLocation(shader.id, "cameraPos");
+    shader.uPointLightCount = glGetUniformLocation(shader.id, "pointLightCount");
+
+    unsigned int shadowMap = glGetUniformLocation(shader.id, "shadowMap");
 
     useShader(shader.id);
     glUniform1i(shader.gPosition, 0);
     glUniform1i(shader.gNormal, 1);
     glUniform1i(shader.gAlbedo, 2);
-    glUniform1i(shader.shadowMap, 3);
-    glUniform1i(shader.cubemapShadow, 4);
+    glUniform1i(shadowMap, 3);
+
+    for (int i = 0; i < POINT_LIGHTS_MAX; ++i) {
+        auto number = std::to_string(i);
+        unsigned int shadowMapLocation = glGetUniformLocation(shader.id, ("pointLightMaps[" + number + "]").c_str());
+        glUniform1i(shadowMapLocation, POINT_LIGHT_TEXTURE_SLOT + i); 
+
+        shader.uPointLights[i].pos = glGetUniformLocation(shader.id, ("lightPositions[" + number + "]").c_str());
+        shader.uPointLights[i].color = glGetUniformLocation(shader.id, ("lightColors[" + number + "]").c_str());
+    }
 
     return shader;
 }
