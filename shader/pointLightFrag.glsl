@@ -5,6 +5,7 @@
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
+uniform vec2 gScreenSize;
 
 uniform samplerCube pointLightMap;
 
@@ -12,7 +13,6 @@ uniform vec3 cameraPos;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
-in vec2 screenPos;
 out vec4 out_Color;
 
 float calcShadowPointLight(vec3 lightToPixel) {
@@ -25,9 +25,7 @@ float calcShadowPointLight(vec3 lightToPixel) {
 }
 
 void main() {
-    float uvX = (screenPos.x + 1) / 2;
-    float uvY = (screenPos.y + 1) / 2;
-    vec2 uv = vec2(uvX, uvY);
+    vec2 uv = gl_FragCoord.xy / gScreenSize;
 
     vec4 worldPos = texture(gPosition, uv);
     vec3 normal = texture(gNormal, uv).xyz;
@@ -49,9 +47,11 @@ void main() {
     float attenuation = constant + distance * linear + distance * distance * quadratic;
 
     vec3 lightInfluence = shadowMod * 
-        (diffuseIntensity / attenuation + specularIntensity) * 
+        (diffuseIntensity + specularIntensity) /
+        attenuation * 
         lightColor;
     lightInfluence = clamp(lightInfluence, 0, 1);
 
     out_Color = vec4(texture(gAlbedo, uv).xyz * lightInfluence, 1);
+    // out_Color = vec4(uv, 0, 1);
 }

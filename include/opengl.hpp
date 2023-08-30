@@ -18,10 +18,10 @@ struct PointLightShader {
     unsigned int uModel;
     unsigned int uView;
     unsigned int uProjection;
-
     unsigned int uCameraPos;
     unsigned int uLightPos;
     unsigned int uLightColor;
+    unsigned int gScreenSize;
 };
 
 struct ShadowShader {
@@ -54,6 +54,8 @@ void setUniformMat4(unsigned int uniformId, glm::mat4* matrix);
 void setUniform1i(unsigned int uniformId, unsigned int value);
 
 void setUniformVec3(unsigned int uniformId, glm::vec3* vec);
+
+void setUniformVec2(unsigned int uniformId, glm::vec2* vec);
 
 void setUniformVec4(unsigned int uniformId, glm::vec4* vec);
 

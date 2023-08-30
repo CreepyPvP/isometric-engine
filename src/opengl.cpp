@@ -96,6 +96,7 @@ PointLightShader createPointLightShader(std::string vertex, std::string fragment
     shader.uCameraPos = glGetUniformLocation(shader.id, "cameraPos");
     shader.uLightColor = glGetUniformLocation(shader.id, "lightColor");
     shader.uLightPos = glGetUniformLocation(shader.id, "lightPos");
+    shader.gScreenSize = glGetUniformLocation(shader.id, "gScreenSize");
 
     unsigned int gPosition = glGetUniformLocation(shader.id, "gPosition");
     unsigned int gNormal = glGetUniformLocation(shader.id, "gNormal");
@@ -149,6 +150,10 @@ void setUniform1i(unsigned int uniformId, unsigned int value) {
 
 void setUniformVec3(unsigned int uniformId, glm::vec3* vec) {
     glUniform3fv(uniformId, 1, &(vec->x));
+}
+
+void setUniformVec2(unsigned int uniformId, glm::vec2* vec) {
+    glUniform2fv(uniformId, 1, &(vec->x));
 }
 
 void setUniformVec4(unsigned int uniformId, glm::vec4* vec) {

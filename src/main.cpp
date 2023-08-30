@@ -242,7 +242,7 @@ internal void setupWorld() {
     light1.color = glm::vec3(1, 0.5, 0.5);
     glm::vec3 lightPos1 = glm::vec3(0, 1, 0);
     Transform pointLight1Transform = Transform { 
-        glm::translate(glm::mat4(1), lightPos1), 
+        glm::scale(glm::translate(glm::mat4(1), lightPos1), glm::vec3(10)), 
         lightPos1 
     };
     setupPointLight(&light1, &pointLight1Transform);
@@ -252,7 +252,7 @@ internal void setupWorld() {
     Entity pointLight2 = world.spawn();
     glm::vec3 lightPos2 = glm::vec3(5, 1, 5);
     Transform pointLight2Transform = Transform { 
-        glm::translate(glm::mat4(1), lightPos2), 
+        glm::scale(glm::translate(glm::mat4(1), lightPos2), glm::vec3(10)), 
         lightPos2 
     };
     PointLight light2;
@@ -338,6 +338,25 @@ internal void bindCubemapFace(PointLight* pointLight, GLenum face) {
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 }
 
+internal void beginLightPasses() {
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    // Setup textures for lighting
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gAlbedo);
+    // glActiveTexture(GL_TEXTURE3);
+    // glBindTexture(GL_TEXTURE_2D, shadowMap);
+
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 int main() {
     initWindow();
 
@@ -379,6 +398,9 @@ int main() {
 
         // Render shadow map
         // glClear(GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
         useShader(shadowShader.id);
         // ignore this
         // setUniformMat4(shadowShader.uLightSpace, &lightSpace);
@@ -424,26 +446,22 @@ int main() {
                 glDrawElements(GL_TRIANGLES, models.current->indexCount, GL_UNSIGNED_INT, 0);
             }
         }
+        glDepthMask(GL_FALSE);
+        glDisable(GL_DEPTH_TEST);
 
         // Setup default framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        beginLightPasses();
 
-        // Setup textures for lighting
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gPosition);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gNormal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedo);
-        // glActiveTexture(GL_TEXTURE3);
-        // glBindTexture(GL_TEXTURE_2D, shadowMap);
-
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         useShader(pointLightShader.id);
         glActiveTexture(GL_TEXTURE3);
         setUniformVec3(pointLightShader.uCameraPos, &camera.pos);
         glBindVertexArray(cube.vao);
+        glm::vec2 screenSize(globalWindow.width, globalWindow.height);
+        setUniformVec2(
+            pointLightShader.gScreenSize, 
+            &screenSize
+        );
         setUniformMat4(pointLightShader.uView, &camera.view);
         setUniformMat4(pointLightShader.uProjection, &camera.projection);
         pointLights = world.pointLights.list();
