@@ -61,6 +61,7 @@ CubemapDirection cubemapDirections[6] = {
 };
 
 global_variable unsigned int squareVao;
+global_variable Mesh cube;
 
 global_variable World world;
 
@@ -135,6 +136,11 @@ internal void setupSquareVao() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(int) * 2, 0);
 }
 
+internal void setupCubeVao() {
+    unsigned char data = 1;
+    cube = generateVoxelMesh(1, 1, 1, &data, 1, 1, FEATURE_POS);
+}
+
 internal void setupGBuffer() {
     if (gBuffer) {
         glDeleteFramebuffers(1, &gBuffer);
@@ -200,7 +206,7 @@ internal void setupWorld() {
             }
         }
     }
-    Mesh chunkMesh = generateVoxelMesh(8, 3, 8, data, 10, 5);
+    Mesh chunkMesh = generateVoxelMesh(8, 3, 8, data, 10, 5, FEATURE_ALL);
 
     glm::mat4 transform1 = glm::mat4(1);
     Entity chunk1 = world.spawn();
@@ -234,13 +240,21 @@ internal void setupWorld() {
     PointLight light1;
     light1.shadowMapSize = 1024;
     light1.color = glm::vec3(1, 0.5, 0.5);
-    Transform pointLight1Transform = Transform { glm::mat4(1), glm::vec3(0, 1, 0) };
+    glm::vec3 lightPos1 = glm::vec3(0, 1, 0);
+    Transform pointLight1Transform = Transform { 
+        glm::translate(glm::mat4(1), lightPos1), 
+        lightPos1 
+    };
     setupPointLight(&light1, &pointLight1Transform);
     world.pointLights.insert(pointLight1, light1);
     world.transforms.insert(pointLight1, pointLight1Transform);
 
     Entity pointLight2 = world.spawn();
-    Transform pointLight2Transform = Transform { glm::mat4(1), glm::vec3(5, 1, 5) };
+    glm::vec3 lightPos2 = glm::vec3(5, 1, 5);
+    Transform pointLight2Transform = Transform { 
+        glm::translate(glm::mat4(1), lightPos2), 
+        lightPos2 
+    };
     PointLight light2;
     light2.shadowMapSize = 1024;
     light2.color = glm::vec3(0.5, 1, 0.5);
@@ -337,11 +351,12 @@ int main() {
 
     setupGBuffer();
     setupSquareVao();
+    setupCubeVao();
     setupWorld();
     setupCamera();
 
     ObjectShader objectShader = createObjectShader("../shader/objectVert.glsl", "../shader/objectFrag.glsl");
-    LightingShader lightingShader = createLightingShader("../shader/lightingVert.glsl", "../shader/lightingFrag.glsl");
+    PointLightShader pointLightShader = createPointLightShader("../shader/pointLightVert.glsl", "../shader/pointLightFrag.glsl");
     ShadowShader shadowShader = createShadowShader("../shader/shadowVert.glsl", "../shader/shadowFrag.glsl");
 
     Texture tileset = loadTexture("../assets/tileset.png");
@@ -414,7 +429,7 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Setup textures for lighting shader
+        // Setup textures for lighting
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -425,24 +440,25 @@ int main() {
         // glBindTexture(GL_TEXTURE_2D, shadowMap);
 
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        useShader(lightingShader.id);
+        useShader(pointLightShader.id);
+        glActiveTexture(GL_TEXTURE3);
+        setUniformVec3(pointLightShader.uCameraPos, &camera.pos);
+        glBindVertexArray(cube.vao);
+        setUniformMat4(pointLightShader.uView, &camera.view);
+        setUniformMat4(pointLightShader.uProjection, &camera.projection);
         pointLights = world.pointLights.list();
-        int pointLightCount = 0;
-        while (pointLights.next() && pointLights.index < POINT_LIGHTS_MAX) {
+        while (pointLights.next()) {
             Transform* transform = world.transforms.get(pointLights.entity);
-            glActiveTexture(POINT_LIGHT_TEXTURE_SLOT + pointLights.index);
+
             glBindTexture(GL_TEXTURE_CUBE_MAP, pointLights.current->shadowMap);
-            setUniformVec3(lightingShader.uPointLights[pointLights.index].pos, &transform->pos);
-            setUniformVec3(lightingShader.uPointLights[pointLights.index].color, &pointLights.current->color);
-            ++pointLightCount;
+            setUniformVec3(pointLightShader.uLightPos, &transform->pos);
+            setUniformVec3(pointLightShader.uLightColor, &pointLights.current->color);
+            setUniformMat4(pointLightShader.uModel, &transform->mat);
+
+            glDrawElements(GL_TRIANGLES, cube.indexCount, GL_UNSIGNED_INT, 0);
             // TODO: set attenuation here
             // setUniformMat4(lightingShader.uLightSpace, &lightSpace);
         }
-        setUniformVec3(lightingShader.uCameraPos, &camera.pos);
-        setUniform1i(lightingShader.uPointLightCount, pointLightCount);
-        glBindVertexArray(squareVao);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(globalWindow.handle);
         glfwPollEvents();

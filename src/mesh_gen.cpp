@@ -6,7 +6,8 @@
 
 #define internal static
 
-internal unsigned int generateMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
+
+internal unsigned int generateMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, char features) {
     unsigned int vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -22,15 +23,21 @@ internal unsigned int generateMesh(std::vector<Vertex> vertices, std::vector<uns
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
 
-    // position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, x));
-    // normal
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, normalX));
-    // uv
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, uvX));
+    if (features && FEATURE_POS) {
+        // position
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, x));
+    }
+    if (features && FEATURE_NORMAL) {
+        // normal
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, normalX));
+    }
+    if (features && FEATURE_UV) {
+        // uv
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, uvX));
+    }
 
     glBindVertexArray(0);
 
@@ -41,7 +48,7 @@ internal int getChunkDataOffset(int x, int y, int z, int sizeX, int sizeZ) {
     return x + z * sizeX + y * sizeX * sizeZ;
 }
 
-Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int textureWidth, int textureHeight) {
+Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int textureWidth, int textureHeight, char features) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
@@ -421,7 +428,7 @@ Mesh generateVoxelMesh(int sizeX, int sizeY, int sizeZ, uchar* data, int texture
     }
 
     Mesh mesh;
-    mesh.vao = generateMesh(vertices, indices);
+    mesh.vao = generateMesh(vertices, indices, features);
     mesh.indexCount = indices.size();
 
     return mesh;

@@ -2,15 +2,6 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <string>
 
-// lighting
-#define POINT_LIGHT_TEXTURE_SLOT GL_TEXTURE4
-#define POINT_LIGHTS_MAX 3
-
-struct UPointLight {
-    unsigned int pos;
-    unsigned int color;
-};
-
 struct TilemapShader {
     unsigned int id;
 
@@ -22,17 +13,15 @@ struct TilemapShader {
     unsigned int uTileDataOffset;
 };
 
-struct LightingShader {
+struct PointLightShader {
     unsigned int id;
-    unsigned int gPosition;
-    unsigned int gNormal;
-    unsigned int gAlbedo;
-    unsigned int uLightSpace;
+    unsigned int uModel;
+    unsigned int uView;
+    unsigned int uProjection;
 
     unsigned int uCameraPos;
-
-    unsigned int uPointLightCount;
-    UPointLight uPointLights[POINT_LIGHTS_MAX];
+    unsigned int uLightPos;
+    unsigned int uLightColor;
 };
 
 struct ShadowShader {
@@ -52,7 +41,7 @@ struct ObjectShader {
 
 TilemapShader createTilemapShader(std::string vertex, std::string fragment);
 
-LightingShader createLightingShader(std::string vertex, std::string fragment);
+PointLightShader createPointLightShader(std::string vertex, std::string fragment);
 
 ShadowShader createShadowShader(std::string vertex, std::string fragment);
 

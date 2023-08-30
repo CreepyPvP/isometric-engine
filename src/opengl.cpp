@@ -85,34 +85,28 @@ TilemapShader createTilemapShader(std::string vFile, std::string fFile) {
     return shader;
 }
 
-LightingShader createLightingShader(std::string vFile, std::string fFile) {
-    LightingShader shader;
+PointLightShader createPointLightShader(std::string vertex, std::string fragment) {
+    PointLightShader shader;
 
-    shader.id = createShader(vFile, fFile);
+    shader.id = createShader(vertex, fragment);
 
-    shader.gPosition = glGetUniformLocation(shader.id, "gPosition");
-    shader.gNormal = glGetUniformLocation(shader.id, "gNormal");
-    shader.gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
-    shader.uLightSpace = glGetUniformLocation(shader.id, "lightSpace");
+    shader.uModel = glGetUniformLocation(shader.id, "model");
+    shader.uView = glGetUniformLocation(shader.id, "view");
+    shader.uProjection = glGetUniformLocation(shader.id, "projection");
     shader.uCameraPos = glGetUniformLocation(shader.id, "cameraPos");
-    shader.uPointLightCount = glGetUniformLocation(shader.id, "pointLightCount");
+    shader.uLightColor = glGetUniformLocation(shader.id, "lightColor");
+    shader.uLightPos = glGetUniformLocation(shader.id, "lightPos");
 
-    unsigned int shadowMap = glGetUniformLocation(shader.id, "shadowMap");
+    unsigned int gPosition = glGetUniformLocation(shader.id, "gPosition");
+    unsigned int gNormal = glGetUniformLocation(shader.id, "gNormal");
+    unsigned int gAlbedo = glGetUniformLocation(shader.id, "gAlbedo");
+    unsigned int shadowMap = glGetUniformLocation(shader.id, "pointLightMap");
 
     useShader(shader.id);
-    glUniform1i(shader.gPosition, 0);
-    glUniform1i(shader.gNormal, 1);
-    glUniform1i(shader.gAlbedo, 2);
+    glUniform1i(gPosition, 0);
+    glUniform1i(gNormal, 1);
+    glUniform1i(gAlbedo, 2);
     glUniform1i(shadowMap, 3);
-
-    for (int i = 0; i < POINT_LIGHTS_MAX; ++i) {
-        auto number = std::to_string(i);
-        unsigned int shadowMapLocation = glGetUniformLocation(shader.id, ("pointLightMaps[" + number + "]").c_str());
-        glUniform1i(shadowMapLocation, POINT_LIGHT_TEXTURE_SLOT + i); 
-
-        shader.uPointLights[i].pos = glGetUniformLocation(shader.id, ("lightPositions[" + number + "]").c_str());
-        shader.uPointLights[i].color = glGetUniformLocation(shader.id, ("lightColors[" + number + "]").c_str());
-    }
 
     return shader;
 }

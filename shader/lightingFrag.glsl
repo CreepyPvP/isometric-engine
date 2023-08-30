@@ -69,9 +69,9 @@ void main() {
         const float quadratic = 0.05;
         float attenuation = constant + distance * linear + distance * distance * quadratic;
 
-        // lightInfluence += min((diffuseIntensity + specularIntensity) / attenuation, 1) * shadowMod * lightColors[i];
-
-        lightInfluence += shadowMod * min((diffuseIntensity + specularIntensity) / attenuation, 1) * lightColors[i];
+        lightInfluence += shadowMod * 
+            (diffuseIntensity / attenuation + specularIntensity) * 
+            lightColors[i];
     }
     lightInfluence = clamp(lightInfluence, 0, 1);
 
