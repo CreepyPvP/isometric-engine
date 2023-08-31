@@ -22,6 +22,7 @@ struct PointLightShader {
     unsigned int uLightPos;
     unsigned int uLightColor;
     unsigned int gScreenSize;
+    unsigned int uAttenuation;
 };
 
 struct ShadowShader {

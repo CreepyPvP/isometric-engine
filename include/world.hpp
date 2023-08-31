@@ -23,10 +23,7 @@ struct PointLight {
     unsigned int shadowMapSize;
 
     glm::vec3 color;
-
-    float attConst;
-    float attLinear;
-    float attQuad;
+    glm::vec3 attenuation;
 };
 
 struct World {

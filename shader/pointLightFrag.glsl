@@ -13,6 +13,8 @@ uniform vec3 cameraPos;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
+uniform vec3 attenuation;
+
 out vec4 out_Color;
 
 float calcShadowPointLight(vec3 lightToPixel) {
@@ -41,10 +43,10 @@ void main() {
     float shadowMod = 1 - calcShadowPointLight(-lightDirection);
 
     float distance = length(lightDirection);
-    const float constant = 1;
-    const float linear = 0.1;
-    const float quadratic = 0.03;
-    float attenuation = constant + distance * linear + distance * distance * quadratic;
+    float attenuation = 
+        attenuation.x + 
+        distance * attenuation.y + 
+        distance * distance * attenuation.z;
 
     vec3 lightInfluence = shadowMod * 
         (diffuseIntensity + specularIntensity) /

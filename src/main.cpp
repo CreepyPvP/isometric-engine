@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <math.h>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -186,6 +187,16 @@ internal void setupGBuffer() {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gDepth);
 }
 
+internal float calculateLightVolumeRadius(glm::vec3* attenuation) {
+    float c = attenuation->x;
+    float l = attenuation->y;
+    float q = attenuation->z;
+    float d = sqrt(l * l - 4 * q * (c - 256));
+    float radius = (-l + d) / (2 * q);
+    // The model has radius 0.5
+    return 2 * radius;
+}
+
 internal void setupWorld() {
     world = createWorld(1000);
 
@@ -240,9 +251,11 @@ internal void setupWorld() {
     PointLight light1;
     light1.shadowMapSize = 1024;
     light1.color = glm::vec3(1, 0.5, 0.5);
+    light1.attenuation = glm::vec3(1, 0.1, 0.03);
+    float light1Radius =  calculateLightVolumeRadius(&light1.attenuation);
     glm::vec3 lightPos1 = glm::vec3(0, 1, 0);
     Transform pointLight1Transform = Transform { 
-        glm::scale(glm::translate(glm::mat4(1), lightPos1), glm::vec3(10)), 
+        glm::scale(glm::translate(glm::mat4(1), lightPos1), glm::vec3(light1Radius)), 
         lightPos1 
     };
     setupPointLight(&light1, &pointLight1Transform);
@@ -250,14 +263,16 @@ internal void setupWorld() {
     world.transforms.insert(pointLight1, pointLight1Transform);
 
     Entity pointLight2 = world.spawn();
-    glm::vec3 lightPos2 = glm::vec3(5, 1, 5);
-    Transform pointLight2Transform = Transform { 
-        glm::scale(glm::translate(glm::mat4(1), lightPos2), glm::vec3(10)), 
-        lightPos2 
-    };
     PointLight light2;
     light2.shadowMapSize = 1024;
     light2.color = glm::vec3(0.5, 1, 0.5);
+    light2.attenuation = glm::vec3(1, 0.1, 0.03);
+    float light2Radius = calculateLightVolumeRadius(&light2.attenuation);
+    glm::vec3 lightPos2 = glm::vec3(5, 1, 5);
+    Transform pointLight2Transform = Transform { 
+        glm::scale(glm::translate(glm::mat4(1), lightPos2), glm::vec3(light2Radius)), 
+        lightPos2 
+    };
     setupPointLight(&light2, &pointLight2Transform);
     world.pointLights.insert(pointLight2, light2);
     world.transforms.insert(pointLight2, pointLight2Transform);
@@ -472,6 +487,7 @@ int main() {
             glBindTexture(GL_TEXTURE_CUBE_MAP, pointLights.current->shadowMap);
             setUniformVec3(pointLightShader.uLightPos, &transform->pos);
             setUniformVec3(pointLightShader.uLightColor, &pointLights.current->color);
+            setUniformVec3(pointLightShader.uAttenuation, &pointLights.current->attenuation);
             setUniformMat4(pointLightShader.uModel, &transform->mat);
 
             glDrawElements(GL_TRIANGLES, cube.indexCount, GL_UNSIGNED_INT, 0);

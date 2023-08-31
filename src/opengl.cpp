@@ -97,6 +97,7 @@ PointLightShader createPointLightShader(std::string vertex, std::string fragment
     shader.uLightColor = glGetUniformLocation(shader.id, "lightColor");
     shader.uLightPos = glGetUniformLocation(shader.id, "lightPos");
     shader.gScreenSize = glGetUniformLocation(shader.id, "gScreenSize");
+    shader.uAttenuation = glGetUniformLocation(shader.id, "attenuation");
 
     unsigned int gPosition = glGetUniformLocation(shader.id, "gPosition");
     unsigned int gNormal = glGetUniformLocation(shader.id, "gNormal");
