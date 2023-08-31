@@ -41,9 +41,9 @@ void main() {
     float shadowMod = 1 - calcShadowPointLight(-lightDirection);
 
     float distance = length(lightDirection);
-    const float constant = 2;
-    const float linear = 0.2;
-    const float quadratic = 0.05;
+    const float constant = 1;
+    const float linear = 0.1;
+    const float quadratic = 0.03;
     float attenuation = constant + distance * linear + distance * distance * quadratic;
 
     vec3 lightInfluence = shadowMod * 

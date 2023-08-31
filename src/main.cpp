@@ -339,6 +339,7 @@ internal void bindCubemapFace(PointLight* pointLight, GLenum face) {
 }
 
 internal void beginLightPasses() {
+    glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -365,7 +366,6 @@ int main() {
     }
     glEnable(GL_DEPTH_TEST);
     // culling
-    glFrontFace(GL_CW);
     glEnable(GL_CULL_FACE);
 
     setupGBuffer();
@@ -398,6 +398,7 @@ int main() {
 
         // Render shadow map
         // glClear(GL_DEPTH_BUFFER_BIT);
+        glFrontFace(GL_CW);
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
