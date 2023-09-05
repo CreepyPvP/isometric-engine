@@ -55,5 +55,5 @@ void main() {
     lightInfluence = clamp(lightInfluence, 0, 1);
 
     out_Color = vec4(texture(gAlbedo, uv).xyz * lightInfluence, 1);
-    // out_Color = vec4(uv, 0, 1);
+    // out_Color = (out_Color + vec4(lightColor, 1)) / 2;
 }

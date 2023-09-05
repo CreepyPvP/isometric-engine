@@ -247,6 +247,7 @@ internal void setupWorld() {
 
     free(data);
 
+    // Important: Light volume must completly be inside far plane
     Entity pointLight1 = world.spawn();
     PointLight light1;
     light1.shadowMapSize = 1024;
@@ -270,6 +271,7 @@ internal void setupWorld() {
     float light2Radius = calculateLightVolumeRadius(&light2.attenuation);
     glm::vec3 lightPos2 = glm::vec3(5, 1, 5);
     Transform pointLight2Transform = Transform { 
+        // glm::translate(glm::scale(glm::mat4(1), glm::vec3(light1Radius)), lightPos1), 
         glm::scale(glm::translate(glm::mat4(1), lightPos2), glm::vec3(light2Radius)), 
         lightPos2 
     };
